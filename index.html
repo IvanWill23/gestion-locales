@@ -45,10 +45,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .local-badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
 .badge-liniers{background:var(--liniers-light);color:var(--liniers)}
 .badge-flores{background:var(--flores-light);color:var(--flores)}
-.loading-overlay{position:fixed;inset:0;background:rgba(247,246,243,.9);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.loading-overlay{position:fixed;inset:0;background:rgba(247,246,243,.92);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:13px;color:var(--text2);font-weight:500}
+.loading-text{font-size:14px;color:var(--text2);font-weight:500}
 .login-screen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
 .login-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:420px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 .login-card h2{font-size:22px;font-weight:700;margin-bottom:6px}
@@ -63,10 +63,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn:hover{background:var(--bg)}
 .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent-dark)}
 .btn-primary:hover{background:var(--accent-dark)}
-.btn-liniers{background:var(--liniers);color:#fff;border-color:#5b21b6}
-.btn-liniers:hover{background:#5b21b6}
-.btn-flores{background:var(--flores);color:#fff;border-color:#9d174d}
-.btn-flores:hover{background:#9d174d}
+.btn-liniers{background:var(--liniers);color:#fff;border-color:#5b21b6}.btn-liniers:hover{background:#5b21b6}
+.btn-flores{background:var(--flores);color:#fff;border-color:#9d174d}.btn-flores:hover{background:#9d174d}
 .btn-sm{padding:5px 10px;font-size:12px}
 .btn-danger{color:var(--danger)}.btn-danger:hover{background:var(--danger-light)}
 input,select,textarea{width:100%;padding:8px 12px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit}
@@ -89,8 +87,7 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(29
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:0.5px solid var(--border);white-space:nowrap}
 td{padding:9px 12px;border-bottom:0.5px solid var(--border);color:var(--text)}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg)}
+tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 .tbl-wrap{overflow-x:auto}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal{background:var(--surface);border-radius:var(--radius);width:100%;max-width:540px;max-height:90vh;overflow-y:auto;border:0.5px solid var(--border)}
@@ -102,6 +99,7 @@ tr:hover td{background:var(--bg)}
 .alert-warn{background:var(--warn-light);color:#633806;border:0.5px solid #fac775}
 .alert-info{background:var(--info-light);color:#0c447c;border:0.5px solid #b5d4f4}
 .alert-ok{background:#eaf3de;color:#3b6d11;border:0.5px solid #c0dd97}
+.alert-err{background:var(--danger-light);color:var(--danger);border:0.5px solid #f7c1c1}
 .rank-bar{height:5px;border-radius:3px;background:var(--accent-light);margin-top:4px}
 .rank-fill{height:100%;border-radius:3px;background:var(--accent)}
 .progress{height:4px;background:var(--bg);border-radius:2px;overflow:hidden;margin-top:5px}
@@ -132,6 +130,10 @@ tr:hover td{background:var(--bg)}
   .menu-btn{display:flex}
 }
 .sidebar-overlay{display:none;position:fixed;inset:0;z-index:49;background:rgba(0,0,0,.3)}
+/* Pantalla de error de conexión */
+.conn-error{background:var(--danger-light);border:1px solid #f7c1c1;border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px}
+.conn-error h3{color:var(--danger);font-size:15px;margin-bottom:8px}
+.conn-error p{font-size:13px;color:var(--text2);margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -139,18 +141,16 @@ tr:hover td{background:var(--bg)}
 <div class="toast" id="toast"></div>
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
-  <div class="loading-text" id="loading-text">Cargando...</div>
+  <div class="loading-text" id="loading-text">Conectando con Google Sheets...</div>
 </div>
 
 <script>
-// ── CONFIGURACIÓN ─────────────────────────────────────────
-const API_URL = 'https://script.google.com/macros/s/AKfycbxAomMTt1VmtkcdsxHVAcCrA-MdjeGoK5QYvwJNBGzSl950ZJTeN3AGfL6AWghpAeICvw/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxAomMTt1VmtkcdsxHVAcCrA-MdjeGoK5QYvwJNBGzSl950ZJTeN3AGfL6AWghpAeICvw/exec';
 const MEDIOS = ['Efectivo','MercadoPago','Tarjeta','Transferencia','QR','Efect.+MP'];
 const today = new Date();
 const hoyStr = today.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
 
-// ── CATÁLOGO DE PRODUCTOS ─────────────────────────────────
-const CATALOGO = [
+const CATALOGO=[
   {nombre:"Lavandina 5L clasica",cat:"Desinfectante",precio:4500,costo:2800},
   {nombre:"Lavandina 5L concentrado",cat:"Desinfectante",precio:5300,costo:3200},
   {nombre:"Lavandina 1L",cat:"Desinfectante",precio:1400,costo:850},
@@ -298,13 +298,14 @@ const CATALOGO = [
 let S={
   local:null,usuario:'',view:'dashboard',
   ventas:[],stock:[],movimientos:[],
+  connError:false,
   filtroMes:`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
   filtroRankMes:'todos',filtroRankCat:'todas',
   searchStock:'',stockCat:'todas',stockOrden:'alerta',stockEstado:'todos',
   todoChecked:{},inst:{},sidebarOpen:false,
 };
 const savedTodo=JSON.parse(localStorage.getItem('gestion_todo')||'{}');
-if(savedTodo.date===hoyStr) S.todoChecked=savedTodo.checked||{};
+if(savedTodo.date===hoyStr)S.todoChecked=savedTodo.checked||{};
 
 // ── ICONOS ────────────────────────────────────────────────
 const IC={
@@ -321,38 +322,40 @@ const IC={
   trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
   search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
   alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-  bulb:'<line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>',
   info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
   menu:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',
   refresh:'<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>',
+  bulb:'<line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>',
 };
 function ic(k,sz=16){return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]||''}</svg>`;}
 
-// ── API con JSONP (evita CORS) ────────────────────────────
-function apiGet(action,local){
-  return new Promise((res,rej)=>{
-    const cb='cb_'+Date.now();
-    const s=document.createElement('script');
-    const url=`${API_URL}?action=${action}&local=${local||S.local}&callback=${cb}`;
-    let done=false;
-    window[cb]=function(data){
-      done=true;
-      document.head.removeChild(s);
-      delete window[cb];
-      res(data);
+// ── API — usa fetch con modo no-cors para POST, JSONP para GET ─
+function apiGet(action){
+  return new Promise((resolve,reject)=>{
+    const cbName='_cb_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const url=`${API}?action=${action}&local=${encodeURIComponent(S.local)}&callback=${cbName}`;
+    let settled=false;
+    window[cbName]=function(data){
+      settled=true;
+      document.head.removeChild(script);
+      delete window[cbName];
+      resolve(Array.isArray(data)?data:(data&&data.error?[]:data||[]));
     };
-    s.onerror=()=>{if(!done){rej(new Error('Error de red'));}};
-    s.src=url;
-    document.head.appendChild(s);
-    setTimeout(()=>{if(!done){rej(new Error('Timeout'));}},15000);
+    script.onerror=()=>{
+      if(!settled){settled=true;reject(new Error('Error de red al conectar con Google Sheets'));}
+    };
+    setTimeout(()=>{
+      if(!settled){settled=true;try{document.head.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Tiempo de espera agotado'));}
+    },20000);
+    script.src=url;
+    document.head.appendChild(script);
   });
 }
 
 function apiPost(body){
-  return fetch(API_URL,{
-    method:'POST',
-    body:JSON.stringify(body),
-  }).then(r=>r.json());
+  return fetch(API,{method:'POST',body:JSON.stringify(body)})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
 }
 
 // ── HELPERS ───────────────────────────────────────────────
@@ -361,27 +364,29 @@ function fmt(d){return d instanceof Date?d.toLocaleDateString('es-AR',{day:'2-di
 function fmtMes(d){return d.toLocaleDateString('es-AR',{month:'long',year:'numeric'});}
 function money(n){return '$'+Math.round(n||0).toLocaleString('es-AR');}
 function parseDate(s){if(!s)return new Date();const p=String(s).split('/');return p.length===3?new Date(+p[2],+p[1]-1,+p[0]):new Date(s);}
-function showLoad(t='Cargando...'){$('loading').style.display='flex';$('loading-text').textContent=t;}
+function showLoad(t){$('loading').style.display='flex';$('loading-text').textContent=t||'Cargando...';}
 function hideLoad(){$('loading').style.display='none';}
 function cl(){return S.local==='Liniers'?'liniers':'flores';}
 
 async function cargarDatos(){
   showLoad('Sincronizando con Google Sheets...');
+  S.connError=false;
   try{
-    const [v,st,m]=await Promise.all([
+    const[v,st,m]=await Promise.all([
       apiGet('getVentas'),
       apiGet('getStock'),
       apiGet('getMovimientos'),
     ]);
-    S.ventas=Array.isArray(v)?v:(v&&v.error?[]:v||[]);
-    S.stock=Array.isArray(st)?st:(st&&st.error?[]:st||[]);
-    S.movimientos=Array.isArray(m)?m:(m&&m.error?[]:m||[]);
-    render();
+    S.ventas=v||[];
+    S.stock=st||[];
+    S.movimientos=m||[];
   }catch(e){
+    S.connError=true;
+    console.error('Error API:',e);
+  }finally{
     hideLoad();
-    toast('Error al conectar. Verificá tu internet.','err');
     render();
-  }finally{hideLoad();}
+  }
 }
 
 // ── RENDER ────────────────────────────────────────────────
@@ -400,18 +405,14 @@ function renderLogin(){
       <h2>Gestión de Locales</h2>
       <p>Seleccioná tu local y escribí tu nombre para continuar</p>
       <div class="login-locals">
-        <button class="login-local-btn lin" onclick="selLocal('Liniers')">
-          <div>🏪</div>Local Liniers
-        </button>
-        <button class="login-local-btn flo" onclick="selLocal('Flores')">
-          <div>🌸</div>Local Flores
-        </button>
+        <button class="login-local-btn lin" onclick="selLocal('Liniers')"><div>🏪</div>Local Liniers</button>
+        <button class="login-local-btn flo" onclick="selLocal('Flores')"><div>🌸</div>Local Flores</button>
       </div>
       <div class="form-group" style="margin-bottom:16px">
         <label>Tu nombre</label>
         <input type="text" id="inp-usuario" placeholder="Ej: María, Juan..." style="text-align:center;font-size:15px">
       </div>
-      <div style="font-size:11px;color:var(--text3)">Los datos se sincronizan automáticamente con Google Sheets</div>
+      <div style="font-size:11px;color:var(--text3)">Datos sincronizados con Google Sheets en tiempo real</div>
     </div>
   </div>`;
 }
@@ -426,11 +427,11 @@ function buildApp(){
   const alertas=S.stock.filter(p=>Number(p.Stock)<=Number(p.StockMin));
   const TITLES={dashboard:'Dashboard',ventas:'Cargar Venta',movimientos:'Movimientos',ranking:'Ranking de Ventas',stock:'Control de Stock',exportar:'Exportar Datos'};
   let topAction='';
-  if(S.view==='ventas') topAction=`<button class="btn btn-sm btn-${cl()}" onclick="openModalVenta()">${ic('plus',14)} Nueva venta</button>`;
-  if(S.view==='movimientos') topAction=`<button class="btn btn-sm btn-${cl()}" onclick="openModalMov()">${ic('plus',14)} Nuevo movimiento</button>`;
-  if(S.view==='stock') topAction=`<button class="btn btn-sm btn-${cl()}" onclick="openModalProd()">${ic('plus',14)} Agregar producto</button>`;
+  if(S.view==='ventas')topAction=`<button class="btn btn-sm btn-${cl()}" onclick="openModalVenta()">${ic('plus',14)} Nueva venta</button>`;
+  if(S.view==='movimientos')topAction=`<button class="btn btn-sm btn-${cl()}" onclick="openModalMov()">${ic('plus',14)} Nuevo movimiento</button>`;
+  if(S.view==='stock')topAction=`<button class="btn btn-sm btn-${cl()}" onclick="openModalProd()">${ic('plus',14)} Agregar producto</button>`;
   return `
-  <div class="sidebar-overlay" id="s-overlay" onclick="S.sidebarOpen=false;render()"></div>
+  <div class="sidebar-overlay" id="s-ov" onclick="S.sidebarOpen=false;render()"></div>
   <div class="app">
     <div class="sidebar${S.sidebarOpen?' open':''}" id="sidebar">
       <div class="local-selector">
@@ -453,7 +454,7 @@ function buildApp(){
       <div style="padding:12px 16px;border-top:0.5px solid var(--border)">
         <div style="font-size:11px;color:var(--text3)">${fmt(today)}</div>
         <div style="font-size:11px;font-weight:500;margin-top:2px;color:${alertas.length?'var(--warn)':'var(--accent-dark)'}">${alertas.length} alerta${alertas.length!==1?'s':''} de stock</div>
-        <button class="btn btn-sm" style="margin-top:8px;width:100%;justify-content:center" onclick="cargarDatos()">${ic('refresh',13)} Actualizar datos</button>
+        <button class="btn btn-sm" style="margin-top:8px;width:100%;justify-content:center" onclick="cargarDatos()">${ic('refresh',13)} Actualizar</button>
       </div>
     </div>
     <div class="main">
@@ -467,42 +468,42 @@ function buildApp(){
           ${topAction}
         </div>
       </div>
-      <div class="content">${buildView()}</div>
+      <div class="content">
+        ${S.connError?`<div class="conn-error"><h3>${ic('alert',16)} Sin conexión con Google Sheets</h3><p>Verificá tu conexión a internet e intentá de nuevo.</p><button class="btn btn-primary" onclick="cargarDatos()">${ic('refresh',14)} Reintentar</button></div>`:''}
+        ${buildView()}
+      </div>
     </div>
   </div>`;
 }
 
-function ni(id,icon,label){
-  return `<button class="nav-item${S.view===id?' active':''}" onclick="nav('${id}')">${ic(icon,16)}<span>${label}</span></button>`;
-}
+function ni(id,icon,label){return `<button class="nav-item${S.view===id?' active':''}" onclick="nav('${id}')">${ic(icon,16)}<span>${label}</span></button>`;}
 
 function buildView(){
   switch(S.view){
-    case 'dashboard': return vDashboard();
-    case 'ventas': return vVentas();
-    case 'movimientos': return vMovimientos();
-    case 'ranking': return vRanking();
-    case 'stock': return vStock();
-    case 'exportar': return vExportar();
+    case 'dashboard':return vDash();
+    case 'ventas':return vVentas();
+    case 'movimientos':return vMovs();
+    case 'ranking':return vRanking();
+    case 'stock':return vStock();
+    case 'exportar':return vExportar();
   }
   return '';
 }
 
 // ── INSTRUCTIVOS ─────────────────────────────────────────
 const INST={
-  dashboard:{t:'¿Para qué sirve el Dashboard?',d:'Resumen del negocio: ventas, ganancia, alertas y tareas del día.',p:['Muestra ventas y ganancia estimada del mes actual.','Alertas de productos con stock bajo o sin stock.','Top 5 productos más vendidos.','To-do list con las tareas diarias a completar.','Usá el botón Actualizar para sincronizar con Sheets.']},
-  ventas:{t:'¿Cómo cargar una venta?',d:'Registrá cada venta. El stock se descuenta automáticamente.',p:['Clic en "Nueva venta" arriba a la derecha.','Elegí el producto del menú — aparecen todos los productos.','El precio se completa solo; podés cambiarlo si vendiste diferente.','Elegí el medio de pago y la cantidad.','Podés agregar varios productos en una sola transacción.','Guardá — el stock se actualiza para todos los usuarios al instante.','Editá o borrá ventas con los botones ✏️ 🗑️ de cada fila.']},
-  stock:{t:'¿Cómo gestionar el stock?',d:'Inventario completo. Los cambios se sincronizan para todos.',p:['Rojo = sin stock, Naranja = bajo, Verde = OK.','Filtrá por categoría, estado o precio con los selectores.','Editá stock, precio y costo con el lápiz ✏️.','Agregá productos nuevos con el botón de arriba.','El stock mínimo define cuándo aparece la alerta naranja.']},
-  ranking:{t:'¿Para qué sirve el Ranking?',d:'Ves qué productos se venden más para decidir qué comprar.',p:['Filtrá por mes o categoría.','Los primeros 3 son los que nunca pueden faltar.','Usalo para armar el pedido al proveedor.','Comparar meses muestra tendencias de venta.']},
-  movimientos:{t:'¿Qué son los Movimientos?',d:'Registrá cambios de stock que NO sean ventas.',p:['Entrada: llegó mercadería de un proveedor.','Salida: retiro o uso interno.','Traslado: movimiento entre Liniers y Flores.','Ajuste: corrección de inventario.','El stock se actualiza automáticamente para todos.']},
-  exportar:{t:'¿Cómo exportar los datos?',d:'Descargá la información en Excel o CSV.',p:['Tus datos ya están en Google Sheets — abrí la planilla directamente.','Excel (.xlsx) se abre directo en Excel o Google Sheets.','CSV sirve para importar a otros sistemas.','Podés descargar ventas, movimientos o inventario por separado.']},
+  dashboard:{t:'¿Para qué sirve el Dashboard?',d:'Resumen del negocio: ventas, ganancia, alertas y tareas del día.',p:['Muestra ventas y ganancia estimada del mes actual.','Alertas de productos con stock bajo o sin stock.','Top 5 productos más vendidos históricamente.','To-do list con las tareas diarias a completar.','Usá Actualizar para sincronizar con Google Sheets.']},
+  ventas:{t:'¿Cómo cargar una venta?',d:'Registrá cada venta. El stock se descuenta automáticamente.',p:['Clic en "Nueva venta" arriba a la derecha.','Elegí el producto del menú desplegable.','El precio se completa solo; podés modificarlo.','Elegí el medio de pago y la cantidad.','Podés sumar varios productos en una sola transacción.','Al guardar, el stock se actualiza para todos al instante.','Editá o borrá ventas con ✏️ 🗑️ en cada fila.']},
+  stock:{t:'¿Cómo gestionar el stock?',d:'Inventario completo sincronizado para todos los usuarios.',p:['Rojo = sin stock, Naranja = bajo, Verde = OK.','Filtrá por categoría, estado o usá la búsqueda.','Editá stock, precio y costo con el lápiz ✏️.','Agregá productos con el botón de arriba.','El stock mínimo define cuándo aparece la alerta.']},
+  ranking:{t:'¿Para qué sirve el Ranking?',d:'Ves qué productos se venden más para decidir qué comprar.',p:['Filtrá por mes o categoría.','Los primeros 3 son los que nunca pueden faltar.','Usalo para armar el pedido al proveedor.']},
+  movimientos:{t:'¿Qué son los Movimientos?',d:'Registrá cambios de stock que NO sean ventas.',p:['Entrada: llegó mercadería de un proveedor.','Salida: retiro o uso interno.','Traslado: movimiento entre Liniers y Flores.','Ajuste: corrección de inventario.','El stock se actualiza automáticamente.']},
+  exportar:{t:'¿Cómo exportar los datos?',d:'Descargá la información en Excel o CSV.',p:['Tus datos ya están en Google Sheets — accedé directamente desde Drive.','Excel (.xlsx) se abre directo en Excel o Google Sheets.','CSV sirve para importar a otros sistemas.']},
 };
-
-function instruc(view){
-  const d=INST[view];if(!d)return'';
-  const open=S.inst[view];
+function instruc(v){
+  const d=INST[v];if(!d)return'';
+  const open=S.inst[v];
   return `<div class="instruc">
-    <button class="instruc-head" onclick="S.inst['${view}']=!S.inst['${view}'];render()">
+    <button class="instruc-head" onclick="S.inst['${v}']=!S.inst['${v}'];render()">
       ${ic('info',16)}<div style="flex:1"><div class="instruc-title">${d.t}</div><div class="instruc-sub">${d.d}</div></div>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${open?180:0}deg);transition:.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
@@ -512,7 +513,7 @@ function instruc(view){
 
 // ── TODO LIST ─────────────────────────────────────────────
 const TODOS=[
-  {id:'ventas',label:'Subir las ventas del día',desc:'Registrá todas las ventas realizadas hoy',go:'ventas'},
+  {id:'ventas',label:'Subir las ventas del día',desc:'Registrá todas las ventas de hoy',go:'ventas'},
   {id:'stock',label:'Revisar stock bajo',desc:'Controlá productos por agotarse',go:'stock'},
   {id:'ranking',label:'Revisar ranking de ventas',desc:'Mirá qué productos rotan más',go:'ranking'},
   {id:'movimientos',label:'Registrar movimientos del día',desc:'Compras, traslados o retiros',go:'movimientos'},
@@ -527,20 +528,17 @@ function todoList(){
       <span style="font-size:12px;color:${done===TODOS.length?'var(--accent-dark)':'var(--text3)'};font-weight:500">${done}/${TODOS.length}</span>
     </div>
     <div class="progress" style="margin-bottom:14px"><div class="progress-fill" style="width:${pct}%;background:${pct===100?'var(--accent)':'var(--info)'}"></div></div>
-    ${TODOS.map(t=>{
-      const ch=!!S.todoChecked[t.id];
-      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer" onclick="toggleTodo('${t.id}')">
-        <div class="todo-check${ch?' done':''}">${ch?`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`:''}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:500;color:${ch?'var(--text3)':'var(--text)'};text-decoration:${ch?'line-through':'none'}">${t.label}</div><div style="font-size:11px;color:var(--text3)">${t.desc}</div></div>
-        <button class="btn btn-sm" onclick="event.stopPropagation();nav('${t.go}')" style="font-size:11px">Ir →</button>
-      </div>`;
-    }).join('')}
-    ${done===TODOS.length?`<div style="text-align:center;padding:12px 0 2px;font-size:13px;color:var(--accent-dark);font-weight:500">${ic('ok',14)} ¡Todas las tareas del día completadas!</div>`:''}
+    ${TODOS.map(t=>{const ch=!!S.todoChecked[t.id];return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer" onclick="toggleTodo('${t.id}')">
+      <div class="todo-check${ch?' done':''}">${ch?`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`:''}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:${ch?'var(--text3)':'var(--text)'};text-decoration:${ch?'line-through':'none'}">${t.label}</div><div style="font-size:11px;color:var(--text3)">${t.desc}</div></div>
+      <button class="btn btn-sm" onclick="event.stopPropagation();nav('${t.go}')" style="font-size:11px">Ir →</button>
+    </div>`}).join('')}
+    ${done===TODOS.length?`<div style="text-align:center;padding:12px 0 2px;font-size:13px;color:var(--accent-dark);font-weight:500">${ic('ok',14)} ¡Tareas del día completadas!</div>`:''}
   </div>`;
 }
 
 // ── VISTAS ────────────────────────────────────────────────
-function vDashboard(){
+function vDash(){
   const[y,m]=S.filtroMes.split('-').map(Number);
   const vm=S.ventas.filter(v=>{const d=parseDate(v.Fecha);return d.getFullYear()===y&&d.getMonth()+1===m;});
   const totalMes=vm.reduce((a,v)=>a+Number(v.Total||0),0);
@@ -548,8 +546,7 @@ function vDashboard(){
   const alertas=S.stock.filter(p=>Number(p.Stock)<=Number(p.StockMin));
   const sin=alertas.filter(p=>Number(p.Stock)<=0);
   const top5=getTop(5,'todos','todas');
-  return `
-  ${instruc('dashboard')}
+  return `${instruc('dashboard')}
   <div class="grid g4" style="margin-bottom:14px">
     <div class="stat"><div class="stat-label">Ventas ${fmtMes(today)}</div><div class="stat-value">${money(totalMes)}</div><div class="stat-sub">${vm.length} transacciones</div></div>
     <div class="stat"><div class="stat-label">Ganancia estimada</div><div class="stat-value">${money(gan)}</div><div class="stat-sub">margen bruto</div></div>
@@ -559,21 +556,19 @@ function vDashboard(){
   <div class="grid g2" style="margin-bottom:12px">
     <div class="card">
       <div class="card-header"><span class="card-title">${ic('chart',14)} Top 5 más vendidos</span></div>
-      ${top5.length?top5.map((p,i)=>`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:11px;font-weight:700;color:var(--text3);width:16px">${i+1}</span>
-          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${p.nombre}</div><div class="rank-bar"><div class="rank-fill" style="width:${Math.round(p.qty/top5[0].qty*100)}%"></div></div></div>
-          <span style="font-size:13px;font-weight:600;color:var(--accent-dark);white-space:nowrap">${p.qty} u.</span>
-        </div>`).join(''):`<div class="empty">Sin ventas registradas aún</div>`}
+      ${top5.length?top5.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:11px;font-weight:700;color:var(--text3);width:16px">${i+1}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${p.nombre}</div><div class="rank-bar"><div class="rank-fill" style="width:${Math.round(p.qty/top5[0].qty*100)}%"></div></div></div>
+        <span style="font-size:13px;font-weight:600;color:var(--accent-dark);white-space:nowrap">${p.qty} u.</span>
+      </div>`).join(''):`<div class="empty">Sin ventas registradas aún</div>`}
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title">${ic('alert',14)} Alertas de stock</span></div>
       ${alertas.length===0?`<div class="empty">${ic('ok',28)}<p style="margin-top:8px">Todo el stock en orden</p></div>`:
-      alertas.slice(0,7).map(p=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--border)">
-          <div style="min-width:0;margin-right:8px"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.Producto}</div><div style="font-size:11px;color:var(--text3)">${p.Categoria}</div></div>
-          <div style="text-align:right;flex-shrink:0"><span class="badge ${Number(p.Stock)<=0?'bg-danger':'bg-warn'}">${Number(p.Stock)<=0?'Sin stock':p.Stock+' u.'}</span><div style="font-size:10px;color:var(--text3);margin-top:2px">mín ${p.StockMin}</div></div>
-        </div>`).join('')}
+      alertas.slice(0,7).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--border)">
+        <div style="min-width:0;margin-right:8px"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.Producto}</div><div style="font-size:11px;color:var(--text3)">${p.Categoria}</div></div>
+        <div style="text-align:right;flex-shrink:0"><span class="badge ${Number(p.Stock)<=0?'bg-danger':'bg-warn'}">${Number(p.Stock)<=0?'Sin stock':p.Stock+' u.'}</span><div style="font-size:10px;color:var(--text3);margin-top:2px">mín ${p.StockMin}</div></div>
+      </div>`).join('')}
     </div>
   </div>
   ${todoList()}`;
@@ -584,8 +579,7 @@ function vVentas(){
   const fil=[...S.ventas].filter(v=>{const d=parseDate(v.Fecha);return d.getFullYear()===y&&d.getMonth()+1===m;}).sort((a,b)=>parseDate(b.Fecha)-parseDate(a.Fecha));
   const total=fil.reduce((a,v)=>a+Number(v.Total||0),0);
   const meses=getMeses();
-  return `
-  ${instruc('ventas')}
+  return `${instruc('ventas')}
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
     <select style="width:auto" onchange="S.filtroMes=this.value;render()">
       ${meses.length?meses.map(ms=>`<option value="${ms.val}" ${S.filtroMes===ms.val?'selected':''}>${ms.label}</option>`).join(''):`<option value="${S.filtroMes}">Este mes</option>`}
@@ -634,8 +628,7 @@ function vStock(){
   else if(S.stockOrden==='stock_desc')prods.sort((a,b)=>Number(b.Stock)-Number(a.Stock));
   const sin=S.stock.filter(p=>Number(p.Stock)<=0).length;
   const bajo=S.stock.filter(p=>Number(p.Stock)>0&&Number(p.Stock)<=Number(p.StockMin)).length;
-  return `
-  ${instruc('stock')}
+  return `${instruc('stock')}
   <div class="grid g3" style="margin-bottom:14px">
     <div class="stat"><div class="stat-label">Sin stock</div><div class="stat-value" style="color:var(--danger)">${sin}</div></div>
     <div class="stat"><div class="stat-label">Stock bajo</div><div class="stat-value" style="color:var(--warn)">${bajo}</div></div>
@@ -645,7 +638,7 @@ function vStock(){
     <div class="card-header">
       <span class="card-title">Inventario — ${S.local}</span>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <div class="search-wrap" style="width:160px"><span class="search-icon">${ic('search',13)}</span><input type="text" placeholder="Buscar..." value="${S.searchStock}" oninput="S.searchStock=this.value;render()"></div>
+        <div class="search-wrap" style="width:150px"><span class="search-icon">${ic('search',13)}</span><input type="text" placeholder="Buscar..." value="${S.searchStock}" oninput="S.searchStock=this.value;render()"></div>
         <select style="width:auto" onchange="S.stockCat=this.value;render()"><option value="todas">Todas las cats.</option>${cats.map(c=>`<option value="${c}" ${S.stockCat===c?'selected':''}>${c}</option>`).join('')}</select>
         <select style="width:auto" onchange="S.stockEstado=this.value;render()"><option value="todos">Todos</option><option value="sin">Sin stock</option><option value="bajo">Bajo</option><option value="ok">OK</option></select>
         <select style="width:auto" onchange="S.stockOrden=this.value;render()"><option value="alerta">Por alerta</option><option value="nombre">Nombre A-Z</option><option value="precio_desc">Mayor precio</option><option value="precio_asc">Menor precio</option><option value="stock_desc">Más stock</option><option value="stock_asc">Menos stock</option></select>
@@ -683,7 +676,6 @@ function getTop(n,mes,cat){
   fil.forEach(v=>{if(!map[v.Producto])map[v.Producto]={nombre:v.Producto,qty:0,total:0};map[v.Producto].qty+=Number(v.Cantidad||0);map[v.Producto].total+=Number(v.Total||0);});
   return Object.values(map).sort((a,b)=>b.qty-a.qty).slice(0,n);
 }
-
 function getMeses(){
   const set=new Set();
   S.ventas.forEach(v=>{const d=parseDate(v.Fecha);if(!isNaN(d))set.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);});
@@ -695,34 +687,31 @@ function vRanking(){
   const cats=[...new Set(S.ventas.map(v=>v.Categoria).filter(Boolean))].sort();
   const top=getTop(25,S.filtroRankMes,S.filtroRankCat);
   const maxQ=top.length?top[0].qty:1;
-  return `
-  ${instruc('ranking')}
+  return `${instruc('ranking')}
   <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <select style="width:auto" onchange="S.filtroRankMes=this.value;render()"><option value="todos">Todos los meses</option>${meses.map(ms=>`<option value="${ms.val}" ${S.filtroRankMes===ms.val?'selected':''}>${ms.label}</option>`).join('')}</select>
     <select style="width:auto" onchange="S.filtroRankCat=this.value;render()"><option value="todas">Todas las categorías</option>${cats.map(c=>`<option value="${c}" ${S.filtroRankCat===c?'selected':''}>${c}</option>`).join('')}</select>
-    <span style="font-size:13px;color:var(--text2)">${top.length} productos · ${top.reduce((a,t)=>a+t.qty,0)} u. vendidas</span>
+    <span style="font-size:13px;color:var(--text2)">${top.length} productos · ${top.reduce((a,t)=>a+t.qty,0)} u.</span>
   </div>
   <div class="card">
     <div class="card-header"><span class="card-title">Ranking — ${S.local}</span></div>
     ${top.length===0?`<div class="empty">${ic('chart',32)}<p style="margin-top:10px">Sin ventas para este filtro</p></div>`:
-    top.map((p,i)=>`
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="width:26px;height:26px;border-radius:50%;background:${i<3?'var(--accent)':'var(--bg)'};color:${i<3?'#fff':'var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:3px">
-            <span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nombre}</span>
-            <span style="font-size:13px;font-weight:600;color:var(--accent-dark);flex-shrink:0">${p.qty} u. · ${money(p.total)}</span>
-          </div>
-          <div class="rank-bar"><div class="rank-fill" style="width:${Math.round(p.qty/maxQ*100)}%"></div></div>
+    top.map((p,i)=>`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div style="width:26px;height:26px;border-radius:50%;background:${i<3?'var(--accent)':'var(--bg)'};color:${i<3?'#fff':'var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:3px">
+          <span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nombre}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--accent-dark);flex-shrink:0">${p.qty} u. · ${money(p.total)}</span>
         </div>
-      </div>`).join('')}
+        <div class="rank-bar"><div class="rank-fill" style="width:${Math.round(p.qty/maxQ*100)}%"></div></div>
+      </div>
+    </div>`).join('')}
   </div>`;
 }
 
-function vMovimientos(){
+function vMovs(){
   const movs=[...S.movimientos].sort((a,b)=>parseDate(b.Fecha)-parseDate(a.Fecha));
-  return `
-  ${instruc('movimientos')}
+  return `${instruc('movimientos')}
   <div style="display:flex;justify-content:space-between;margin-bottom:14px;gap:8px">
     <button class="btn btn-sm" onclick="cargarDatos()">${ic('refresh',13)} Actualizar</button>
     <button class="btn btn-sm btn-${cl()}" onclick="openModalMov()">${ic('plus',14)} Nuevo movimiento</button>
@@ -746,100 +735,92 @@ function vMovimientos(){
 }
 
 function vExportar(){
-  return `
-  ${instruc('exportar')}
-  <div class="alert alert-ok" style="margin-bottom:16px">${ic('ok',16)}<span><strong>Tus datos ya están en Google Sheets.</strong> Podés acceder a la planilla directamente desde Drive para verlos, filtrarlos o exportarlos en cualquier momento.</span></div>
+  return `${instruc('exportar')}
+  <div class="alert alert-ok" style="margin-bottom:16px">${ic('ok',16)}<span><strong>Tus datos ya están en Google Sheets.</strong> Abrí la planilla directamente desde Drive para verlos y exportarlos en cualquier momento.</span></div>
   <div class="grid g3" style="margin-bottom:12px">
     ${eCard('Ventas CSV','cart','exportCSV("ventas")')}
     ${eCard('Movimientos CSV','exch','exportCSV("movimientos")')}
     ${eCard('Inventario CSV','pkg','exportCSV("stock")')}
   </div>
-  <div class="card">
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <div style="flex:1"><div style="font-weight:600;margin-bottom:4px">${ic('dl',16)} Excel completo (.xlsx)</div><div style="font-size:12px;color:var(--text3)">Un archivo con ventas, movimientos e inventario en hojas separadas</div></div>
-      <button class="btn btn-sm btn-${cl()}" onclick="exportXLSX()">${ic('dl',13)} Descargar Excel</button>
-    </div>
-  </div>`;
+  <div class="card"><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div style="flex:1"><div style="font-weight:600;margin-bottom:4px">${ic('dl',16)} Excel completo (.xlsx)</div><div style="font-size:12px;color:var(--text3)">Ventas, movimientos e inventario en hojas separadas</div></div>
+    <button class="btn btn-sm btn-${cl()}" onclick="exportXLSX()">${ic('dl',13)} Descargar Excel</button>
+  </div></div>`;
 }
 function eCard(t,icon,fn){return `<div class="card" style="cursor:pointer;text-align:center" onclick="${fn}"><div style="padding:8px 0"><div style="color:var(--accent);margin-bottom:8px">${ic(icon,28)}</div><div style="font-weight:600;margin-bottom:10px">${t}</div><button class="btn btn-sm btn-primary">${ic('dl',13)} Descargar</button></div></div>`;}
 
 // ── MODALES ───────────────────────────────────────────────
 function showModal(html){
-  let bk=$('modal-bg');
-  if(!bk){bk=document.createElement('div');bk.className='modal-bg';bk.id='modal-bg';document.body.appendChild(bk);}
+  let bk=$('mbg');
+  if(!bk){bk=document.createElement('div');bk.className='modal-bg';bk.id='mbg';document.body.appendChild(bk);}
   bk.innerHTML=`<div class="modal">${html}</div>`;
   bk.onclick=e=>{if(e.target===bk)closeModal();};
 }
-function closeModal(){const bk=$('modal-bg');if(bk)bk.remove();}
-function mHead(t){return `<div class="modal-head"><span class="modal-title">${t}</span><button class="btn btn-sm" onclick="closeModal()">${ic('x',14)}</button></div>`;}
-function mFoot(saveFn,delFn=''){return `<div class="modal-foot">${delFn?`<button class="btn btn-sm btn-danger" style="margin-right:auto" onclick="${delFn}">${ic('trash',13)} Eliminar</button>`:''}<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="${saveFn}">${ic('ok',14)} Guardar</button></div>`;}
+function closeModal(){const bk=$('mbg');if(bk)bk.remove();}
+function mH(t){return `<div class="modal-head"><span class="modal-title">${t}</span><button class="btn btn-sm" onclick="closeModal()">${ic('x',14)}</button></div>`;}
+function mF(sf,df=''){return `<div class="modal-foot">${df?`<button class="btn btn-sm btn-danger" style="margin-right:auto" onclick="${df}">${ic('trash',13)} Eliminar</button>`:''}<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="${sf}">${ic('ok',14)} Guardar</button></div>`;}
 
-let _vItems=[{prod:'',qty:1,precio:0,medio:'Efectivo'}];
-function openModalVenta(){_vItems=[{prod:'',qty:1,precio:0,medio:'Efectivo'}];renderMV();}
-function renderMV(){
-  showModal(`${mHead('Nueva venta')}
+let _vi=[{prod:'',qty:1,precio:0,medio:'Efectivo'}];
+function openModalVenta(){_vi=[{prod:'',qty:1,precio:0,medio:'Efectivo'}];_rmv();}
+function _rmv(){
+  showModal(`${mH('Nueva venta')}
   <div class="modal-body">
-    <div class="form-row"><div class="form-group"><label>Fecha</label><input type="date" id="v-fecha" value="${today.toISOString().split('T')[0]}"></div></div>
-    <div id="vi">${_vItems.map((it,i)=>viHTML(it,i)).join('')}</div>
-    <button class="btn btn-sm" style="margin-top:6px" onclick="_vItems.push({prod:'',qty:1,precio:0,medio:'Efectivo'});renderMV()">${ic('plus',13)} Agregar producto</button>
-  </div>${mFoot('guardarVenta()')}`);
+    <div class="form-row"><div class="form-group"><label>Fecha</label><input type="date" id="vf" value="${today.toISOString().split('T')[0]}"></div></div>
+    <div id="vi">${_vi.map((it,i)=>_viH(it,i)).join('')}</div>
+    <button class="btn btn-sm" style="margin-top:6px" onclick="_vi.push({prod:'',qty:1,precio:0,medio:'Efectivo'});_rmv()">${ic('plus',13)} Agregar producto</button>
+  </div>${mF('gV()')}`);
 }
-function viHTML(it,i){
+function _viH(it,i){
   const tot=it.qty&&it.precio?money(it.qty*it.precio):'-';
   return `<div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:0.5px solid var(--border)">
     <div class="form-row cols-2" style="margin-bottom:10px">
-      <div class="form-group"><label>Producto</label><select id="vi-p-${i}" onchange="_viC(${i},'prod',this.value)"><option value="">— Seleccionar —</option>${CATALOGO.map(p=>`<option value="${p.nombre}" ${it.prod===p.nombre?'selected':''}>${p.nombre}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Medio de pago</label><select id="vi-m-${i}" onchange="_viC(${i},'medio',this.value)">${MEDIOS.map(m=>`<option value="${m}" ${it.medio===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Producto</label><select id="vip-${i}" onchange="_vc(${i},'prod',this.value)"><option value="">— Seleccionar —</option>${CATALOGO.map(p=>`<option value="${p.nombre}" ${it.prod===p.nombre?'selected':''}>${p.nombre}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Medio de pago</label><select id="vim-${i}" onchange="_vc(${i},'medio',this.value)">${MEDIOS.map(m=>`<option value="${m}" ${it.medio===m?'selected':''}>${m}</option>`).join('')}</select></div>
     </div>
     <div class="form-row cols-3">
-      <div class="form-group"><label>Cantidad</label><input type="number" id="vi-q-${i}" min="1" value="${it.qty}" onchange="_viC(${i},'qty',+this.value)"></div>
-      <div class="form-group"><label>Precio unit.</label><input type="number" id="vi-pr-${i}" value="${it.precio||''}" placeholder="Auto" onchange="_viC(${i},'precio',+this.value)"></div>
+      <div class="form-group"><label>Cantidad</label><input type="number" id="viq-${i}" min="1" value="${it.qty}" onchange="_vc(${i},'qty',+this.value)"></div>
+      <div class="form-group"><label>Precio unit.</label><input type="number" id="vipr-${i}" value="${it.precio||''}" placeholder="Auto" onchange="_vc(${i},'precio',+this.value)"></div>
       <div class="form-group"><label>Total</label><div style="padding:8px 12px;background:var(--accent-light);border-radius:var(--radius-sm);font-weight:600;color:var(--accent-dark);font-size:13px">${tot}</div></div>
     </div>
-    ${i>0?`<button class="btn btn-sm btn-danger" onclick="_vItems.splice(${i},1);renderMV()">${ic('trash',13)} Quitar</button>`:''}
+    ${i>0?`<button class="btn btn-sm btn-danger" onclick="_vi.splice(${i},1);_rmv()">${ic('trash',13)} Quitar</button>`:''}
   </div>`;
 }
-function _viC(i,f,v){
-  _vItems[i][f]=v;
-  if(f==='prod'){const c=CATALOGO.find(x=>x.nombre===v);if(c){_vItems[i].precio=c.precio;const el=$(`vi-pr-${i}`);if(el)el.value=c.precio;}}
-}
+function _vc(i,f,v){_vi[i][f]=v;if(f==='prod'){const c=CATALOGO.find(x=>x.nombre===v);if(c){_vi[i].precio=c.precio;const el=$(`vipr-${i}`);if(el)el.value=c.precio;}}}
 
-async function guardarVenta(){
-  const fd=$('v-fecha')?.value;if(!fd)return toast('Ingresá una fecha','err');
+async function gV(){
+  const fd=$('vf')?.value;if(!fd)return toast('Ingresá una fecha','err');
   const fd2=new Date(fd);
-  const fechaFmt=`${String(fd2.getDate()).padStart(2,'0')}/${String(fd2.getMonth()+1).padStart(2,'0')}/${fd2.getFullYear()}`;
+  const ff=`${String(fd2.getDate()).padStart(2,'0')}/${String(fd2.getMonth()+1).padStart(2,'0')}/${fd2.getFullYear()}`;
   const items=[];
-  for(let i=0;i<_vItems.length;i++){
-    const prod=$(`vi-p-${i}`)?.value;if(!prod)return toast('Seleccioná todos los productos','err');
-    const qty=+($(`vi-q-${i}`)?.value||1);
-    const precio=+($(`vi-pr-${i}`)?.value||0)||CATALOGO.find(x=>x.nombre===prod)?.precio||0;
-    const medio=$(`vi-m-${i}`)?.value||'Efectivo';
+  for(let i=0;i<_vi.length;i++){
+    const prod=$(`vip-${i}`)?.value;if(!prod)return toast('Seleccioná todos los productos','err');
+    const qty=+($(`viq-${i}`)?.value||1);
+    const precio=+($(`vipr-${i}`)?.value||0)||CATALOGO.find(x=>x.nombre===prod)?.precio||0;
+    const medio=$(`vim-${i}`)?.value||'Efectivo';
     const cat=CATALOGO.find(x=>x.nombre===prod)?.cat||'';
-    items.push({local:S.local,fecha:fechaFmt,producto:prod,categoria:cat,cantidad:qty,precioUnit:precio,medioPago:medio,total:qty*precio,usuario:S.usuario});
+    items.push({local:S.local,fecha:ff,producto:prod,categoria:cat,cantidad:qty,precioUnit:precio,medioPago:medio,total:qty*precio,usuario:S.usuario});
   }
   closeModal();showLoad('Guardando venta...');
-  try{
-    for(const it of items)await apiPost({action:'addVenta',data:it});
-    await cargarDatos();toast(`${items.length} venta${items.length!==1?'s':''} guardada${items.length!==1?'s':''}!`,'ok');
-  }catch(e){hideLoad();toast('Error al guardar: '+e.message,'err');}
+  try{for(const it of items)await apiPost({action:'addVenta',data:it});await cargarDatos();toast(`${items.length} venta${items.length!==1?'s':''} guardada${items.length!==1?'s':''}!`,'ok');}
+  catch(e){hideLoad();toast('Error al guardar: '+e.message,'err');}
 }
 
 function editVenta(v){
-  showModal(`${mHead('Editar venta')}
+  showModal(`${mH('Editar venta')}
   <div class="modal-body">
-    <div class="form-row"><div class="form-group"><label>Fecha</label><input type="text" id="ev-f" value="${v.Fecha}"></div></div>
+    <div class="form-row"><div class="form-group"><label>Fecha</label><input type="text" id="evf" value="${v.Fecha}"></div></div>
     <div class="form-row cols-2">
-      <div class="form-group"><label>Producto</label><select id="ev-p"><option value="">—</option>${CATALOGO.map(p=>`<option value="${p.nombre}" ${v.Producto===p.nombre?'selected':''}>${p.nombre}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Medio</label><select id="ev-m">${MEDIOS.map(m=>`<option value="${m}" ${v.MedioPago===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Producto</label><select id="evp"><option value="">—</option>${CATALOGO.map(p=>`<option value="${p.nombre}" ${v.Producto===p.nombre?'selected':''}>${p.nombre}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Medio</label><select id="evm">${MEDIOS.map(m=>`<option value="${m}" ${v.MedioPago===m?'selected':''}>${m}</option>`).join('')}</select></div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label>Cantidad</label><input type="number" id="ev-q" value="${v.Cantidad}" min="1"></div>
-      <div class="form-group"><label>Precio unit.</label><input type="number" id="ev-pr" value="${v.PrecioUnit}"></div>
+      <div class="form-group"><label>Cantidad</label><input type="number" id="evq" value="${v.Cantidad}" min="1"></div>
+      <div class="form-group"><label>Precio unit.</label><input type="number" id="evpr" value="${v.PrecioUnit}"></div>
     </div>
-  </div>${mFoot(`gEV('${v.ID}')`,`delVenta('${v.ID}')`)}`)
+  </div>${mF(`gEV('${v.ID}')`,`delVenta('${v.ID}')`)}`)
 }
 async function gEV(id){
-  const prod=$('ev-p').value,qty=+$('ev-q').value,precio=+$('ev-pr').value,fecha=$('ev-f').value,medio=$('ev-m').value;
+  const prod=$('evp').value,qty=+$('evq').value,precio=+$('evpr').value,fecha=$('evf').value,medio=$('evm').value;
   const cat=CATALOGO.find(x=>x.nombre===prod)?.cat||'';
   closeModal();showLoad('Actualizando...');
   try{await apiPost({action:'editVenta',data:{id,local:S.local,fecha,producto:prod,categoria:cat,cantidad:qty,precioUnit:precio,medioPago:medio,total:qty*precio,usuario:S.usuario}});await cargarDatos();toast('Venta actualizada','ok');}
@@ -854,10 +835,10 @@ async function delVenta(id){
 
 function openModalMov(){
   const pn=CATALOGO.map(p=>p.nombre).sort();
-  showModal(`${mHead('Nuevo movimiento')}
+  showModal(`${mH('Nuevo movimiento')}
   <div class="modal-body">
     <div class="form-row cols-2">
-      <div class="form-group"><label>Tipo</label><select id="mt"><option value="entrada">📦 Entrada (compra)</option><option value="salida">📤 Salida / Retiro</option><option value="traslado">🔄 Traslado</option><option value="ajuste">⚙️ Ajuste</option></select></div>
+      <div class="form-group"><label>Tipo</label><select id="mt"><option value="entrada">📦 Entrada (compra)</option><option value="salida">📤 Salida/Retiro</option><option value="traslado">🔄 Traslado</option><option value="ajuste">⚙️ Ajuste</option></select></div>
       <div class="form-group"><label>Fecha</label><input type="date" id="mf" value="${today.toISOString().split('T')[0]}"></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Producto</label><select id="mp"><option value="">— Seleccionar —</option>${pn.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div></div>
@@ -865,20 +846,20 @@ function openModalMov(){
       <div class="form-group"><label>Cantidad</label><input type="number" id="mq" value="1" min="1"></div>
       <div class="form-group"><label>Notas</label><input type="text" id="mn" placeholder="Proveedor, destino..."></div>
     </div>
-  </div>${mFoot('guardarMov()')}`);
+  </div>${mF('gM()')}`);
 }
-async function guardarMov(){
+async function gM(){
   const tipo=$('mt').value,prod=$('mp').value,qty=+$('mq').value,fd=new Date($('mf').value),notas=$('mn').value;
   if(!prod)return toast('Seleccioná un producto','err');
   if(!qty||qty<1)return toast('Ingresá una cantidad','err');
-  const fechaFmt=`${String(fd.getDate()).padStart(2,'0')}/${String(fd.getMonth()+1).padStart(2,'0')}/${fd.getFullYear()}`;
+  const ff=`${String(fd.getDate()).padStart(2,'0')}/${String(fd.getMonth()+1).padStart(2,'0')}/${fd.getFullYear()}`;
   closeModal();showLoad('Registrando...');
-  try{await apiPost({action:'addMovimiento',data:{local:S.local,fecha:fechaFmt,tipo,producto:prod,cantidad:qty,notas,usuario:S.usuario}});await cargarDatos();toast('Movimiento registrado','ok');}
+  try{await apiPost({action:'addMovimiento',data:{local:S.local,fecha:ff,tipo,producto:prod,cantidad:qty,notas,usuario:S.usuario}});await cargarDatos();toast('Movimiento registrado','ok');}
   catch(e){hideLoad();toast('Error','err');}
 }
 function editMov(m){
   const pn=CATALOGO.map(p=>p.nombre).sort();
-  showModal(`${mHead('Editar movimiento')}
+  showModal(`${mH('Editar movimiento')}
   <div class="modal-body">
     <div class="form-row cols-2">
       <div class="form-group"><label>Tipo</label><select id="emt"><option value="entrada" ${m.Tipo==='entrada'?'selected':''}>📦 Entrada</option><option value="salida" ${m.Tipo==='salida'?'selected':''}>📤 Salida</option><option value="traslado" ${m.Tipo==='traslado'?'selected':''}>🔄 Traslado</option><option value="ajuste" ${m.Tipo==='ajuste'?'selected':''}>⚙️ Ajuste</option></select></div>
@@ -889,7 +870,7 @@ function editMov(m){
       <div class="form-group"><label>Cantidad</label><input type="number" id="emq" value="${Math.abs(Number(m.Cantidad))}" min="1"></div>
       <div class="form-group"><label>Notas</label><input type="text" id="emn" value="${m.Notas||''}"></div>
     </div>
-  </div>${mFoot(`gEM('${m.ID}')`,`delMov('${m.ID}')`)}`)
+  </div>${mF(`gEM('${m.ID}')`,`delMov('${m.ID}')`)}`)
 }
 async function gEM(id){
   const tipo=$('emt').value,prod=$('emp').value,qty=+$('emq').value,fecha=$('emf').value,notas=$('emn').value;
@@ -905,6 +886,85 @@ async function delMov(id){
 }
 
 function openModalProd(){
-  showModal(`${mHead('Agregar producto al inventario')}
+  showModal(`${mH('Agregar producto al inventario')}
   <div class="modal-body">
-    <div class="form-row"><div class="form
+    <div class="form-row"><div class="form-group"><label>Producto</label><select id="npp" onchange="_npc()"><option value="">— Seleccionar del catálogo —</option>${CATALOGO.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}</select></div></div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label>Stock inicial</label><input type="number" id="nps" value="0" min="0"></div>
+      <div class="form-group"><label>Stock mínimo</label><input type="number" id="npm" value="3" min="0"></div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label>Precio venta</label><input type="number" id="nppr" value="0"></div>
+      <div class="form-group"><label>Costo</label><input type="number" id="npc2" value="0"></div>
+    </div>
+  </div>${mF('gP()')}`);
+}
+function _npc(){const c=CATALOGO.find(x=>x.nombre===$('npp').value);if(c){$('nppr').value=c.precio;$('npc2').value=c.costo;}}
+async function gP(){
+  const nombre=$('npp').value;if(!nombre)return toast('Seleccioná un producto','err');
+  const cat=CATALOGO.find(x=>x.nombre===nombre)?.cat||'';
+  closeModal();showLoad('Agregando...');
+  try{await apiPost({action:'updateStock',data:{local:S.local,producto:nombre,categoria:cat,stock:+$('nps').value,stockMin:+$('npm').value,precio:+$('nppr').value,costo:+$('npc2').value}});await cargarDatos();toast('Producto agregado','ok');}
+  catch(e){hideLoad();toast('Error','err');}
+}
+function editStock(p){
+  showModal(`${mH('Editar: '+p.Producto)}
+  <div class="modal-body">
+    <div class="form-row cols-2">
+      <div class="form-group"><label>Stock actual</label><input type="number" id="ess" value="${p.Stock}" min="0"></div>
+      <div class="form-group"><label>Stock mínimo</label><input type="number" id="esm" value="${p.StockMin}" min="0"></div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label>Precio venta</label><input type="number" id="espr" value="${p.Precio}"></div>
+      <div class="form-group"><label>Costo</label><input type="number" id="esc" value="${p.Costo}"></div>
+    </div>
+  </div>${mF(`gES('${p.ID}','${p.Producto.replace(/'/g,"\\'")}','${p.Categoria}')`,`delProd('${p.ID}')`)}`)
+}
+async function gES(id,producto,categoria){
+  closeModal();showLoad('Actualizando stock...');
+  try{await apiPost({action:'updateStock',data:{local:S.local,producto,categoria,stock:+$('ess').value,stockMin:+$('esm').value,precio:+$('espr').value,costo:+$('esc').value}});await cargarDatos();toast('Stock actualizado','ok');}
+  catch(e){hideLoad();toast('Error','err');}
+}
+async function delProd(id){
+  if(!confirm('¿Eliminar este producto del inventario de '+S.local+'?'))return;
+  closeModal();showLoad('Eliminando...');
+  try{await apiPost({action:'deleteProducto',id});await cargarDatos();toast('Eliminado','ok');}
+  catch(e){hideLoad();toast('Error','err');}
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+function toCSV(rows,hdrs){return[hdrs.join(','),...rows.map(r=>hdrs.map(h=>`"${String(r[h]||'').replace(/"/g,'""')}"`).join(','))].join('\n');}
+function dlF(c,f){const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(c);a.download=f;a.click();}
+function exportCSV(tipo){
+  if(tipo==='ventas')dlF(toCSV(S.ventas,['Fecha','Producto','Categoria','Cantidad','PrecioUnit','MedioPago','Total','Usuario']),`ventas_${S.local.toLowerCase()}.csv`);
+  else if(tipo==='movimientos')dlF(toCSV(S.movimientos,['Fecha','Tipo','Producto','Cantidad','Notas','Usuario']),`movimientos_${S.local.toLowerCase()}.csv`);
+  else dlF(toCSV(S.stock,['Producto','Categoria','Stock','StockMin','Precio','Costo']),`inventario_${S.local.toLowerCase()}.csv`);
+  toast('CSV descargado','ok');
+}
+function exportXLSX(){
+  const doIt=()=>{
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.ventas),'Ventas');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.movimientos),'Movimientos');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.stock),'Stock');
+    const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([out],{type:'application/octet-stream'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=`${S.local.toLowerCase()}_completo.xlsx`;a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast('Excel descargado','ok');
+  };
+  if(window.XLSX)doIt();
+  else{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=doIt;s.onerror=()=>toast('Necesitás conexión para Excel','err');document.head.appendChild(s);}
+}
+
+// ── MISC ──────────────────────────────────────────────────
+function nav(id){S.view=id;S.sidebarOpen=false;render();}
+function toggleTodo(id){S.todoChecked[id]=!S.todoChecked[id];localStorage.setItem('gestion_todo',JSON.stringify({date:hoyStr,checked:S.todoChecked}));render();}
+function cambiarLocal(){if(confirm('¿Cambiar de local?')){S.local=null;S.ventas=[];S.stock=[];S.movimientos=[];document.body.className='';render();}}
+function toast(msg,type){const t=$('toast');t.textContent=msg;t.style.background=type==='err'?'var(--danger)':type==='ok'?'var(--accent)':'#1a1916';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+render();
+</script>
+</body>
+</html>  
