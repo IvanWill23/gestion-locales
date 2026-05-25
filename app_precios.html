@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App de Precios — Locales Limpieza</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f0f12;
+    --surface: #18181e;
+    --surface2: #22222b;
+    --border: #2e2e3a;
+    --accent: #00e5b0;
+    --accent2: #ff6b35;
+    --accent3: #7c5cfc;
+    --text: #f0f0f8;
+    --muted: #888898;
+    --danger: #ff4466;
+    --success: #00e5b0;
+    --warn: #ffb830;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 16px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-logo span { color: var(--accent); }
+  .header-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab {
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.3px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN CONTENT */
+  .main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+    .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+  .stat-value { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: -0.5px; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.orange { color: var(--accent2); }
+  .stat-value.purple { color: var(--accent3); }
+
+  /* SEARCH & FILTERS */
+  .search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  select.search-input {
+    cursor: pointer;
+    max-width: 200px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #00c999; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 7px 13px; font-size: 13px; }
+  .btn-purple { background: var(--accent3); color: #fff; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #1e1e28;
+    vertical-align: middle;
+    font-size: 15px;
+  }
+  tr:hover td { background: var(--surface2); }
+  tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .badge.green { background: rgba(0,229,176,0.12); color: var(--accent); border-color: rgba(0,229,176,0.2); }
+  .badge.red { background: rgba(255,68,102,0.12); color: var(--danger); border-color: rgba(255,68,102,0.2); }
+  .badge.orange { background: rgba(255,107,53,0.12); color: var(--accent2); border-color: rgba(255,107,53,0.2); }
+  .badge.purple { background: rgba(124,92,252,0.12); color: var(--accent3); border-color: rgba(124,92,252,0.2); }
+
+  /* EDITABLE CELL */
+  .editable {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 4px 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    width: 95px;
+    text-align: right;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .editable:hover { border-color: var(--border); background: var(--surface2); }
+  .editable:focus { border-color: var(--accent); background: var(--surface2); outline: none; }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+  .modal-title span { color: var(--accent); }
+  .form-row { margin-bottom: 14px; }
+  .form-label { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* PROVEEDOR CARD */
+  .proveedor-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .proveedor-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; }
+  .proveedor-meta { font-size: 14px; color: var(--muted); margin-top: 2px; }
+
+  /* COMPARADOR */
+  .comparador-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .price-winner { color: var(--accent); font-weight: 700; }
+  .price-loser { color: var(--muted); }
+  .price-none { color: var(--border); font-style: italic; font-size: 12px; }
+  .margin-positive { color: var(--accent); font-size: 12px; }
+  .margin-negative { color: var(--danger); font-size: 12px; }
+
+  /* PEDIDO */
+  .pedido-section { margin-bottom: 20px; }
+  .pedido-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .pedido-nombre { flex: 1; font-size: 15px; }
+  .pedido-cant { width: 60px; }
+  .pedido-precio { width: 90px; text-align: right; color: var(--accent); font-weight: 600; font-size: 15px; }
+  .pedido-remove { color: var(--danger); cursor: pointer; font-size: 16px; padding: 0 4px; }
+
+  .output-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    color: var(--text);
+  }
+
+  /* UPLOAD AREA */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--accent);
+    background: rgba(0,229,176,0.04);
+  }
+  .upload-icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-text { font-size: 14px; color: var(--muted); }
+  .upload-text strong { color: var(--text); }
+
+  /* MATCH REVIEW */
+  .match-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .match-proveedor { flex: 1; min-width: 160px; }
+  .match-arrow { color: var(--muted); font-size: 18px; }
+  .match-catalogo { flex: 1; min-width: 160px; }
+  .match-score { font-size: 11px; padding: 2px 7px; }
+  .match-actions { display: flex; gap: 6px; }
+  .btn-approve { background: rgba(0,229,176,0.15); color: var(--accent); border: 1px solid rgba(0,229,176,0.3); }
+  .btn-approve:hover { background: rgba(0,229,176,0.25); }
+  .btn-reject { background: rgba(255,68,102,0.15); color: var(--danger); border: 1px solid rgba(255,68,102,0.3); }
+  .btn-reject:hover { background: rgba(255,68,102,0.25); }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 16px;
+    padding: 20px;
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 14px;
+    z-index: 999;
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+  .toast.show { display: block; }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* SYNC INDICATOR */
+  .sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    margin-bottom: 6px;
+  }
+  .section-sub { color: var(--muted); font-size: 16px; margin-bottom: 20px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+
+  @media (max-width: 600px) {
+    .main { padding: 12px; }
+    .form-2col { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .tab { padding: 12px 14px; font-size: 13px; }
+    .comparador-header { flex-direction: column; align-items: flex-start; }
+  }
+
+  .highlight { background: rgba(0,229,176,0.1); }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .pill:hover, .pill.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  .info-bar {
+    background: rgba(0,229,176,0.06);
+    border: 1px solid rgba(0,229,176,0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .precio-update-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    💧 Locales <span>Limpieza</span>
+    <div class="header-badge">PRECIOS</div>
+  </div>
+  <div style="font-size:14px; color:var(--muted); display:flex; align-items:center; gap:4px;">
+    <span class="sync-dot"></span> Flores activo
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('catalogo')">📦 Catálogo</div>
+  <div class="tab" onclick="switchTab('proveedores')">🏭 Proveedores</div>
+  <div class="tab" onclick="switchTab('comparador')">📊 Comparador</div>
+  <div class="tab" onclick="switchTab('pedidos')">🛒 Pedidos</div>
+</div>
+
+<div class="main">
+
+  <!-- ===== CATÁLOGO ===== -->
+  <div class="panel active" id="panel-catalogo">
+    <div class="section-title">Catálogo de productos</div>
+    <div class="section-sub">352 productos · Precios actualizados en tiempo real</div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total productos</div>
+        <div class="stat-value green" id="stat-total">352</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Con costo cargado</div>
+        <div class="stat-value orange" id="stat-con-costo">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Margen promedio</div>
+        <div class="stat-value purple" id="stat-margen">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sin precio</div>
+        <div class="stat-value" id="stat-sin-precio" style="color:var(--warn)">0</div>
+      </div>
+    </div>
+
+    <div class="precio-update-bar">
+      <span style="font-size:13px; flex:1;">⚡ Actualización masiva de precios</span>
+      <input type="number" class="form-input" id="precio-pct" placeholder="% de aumento" style="width:140px;" min="-100" max="500">
+      <select class="form-input" id="precio-categoria" style="width:160px;">
+        <option value="">Todas las categorías</option>
+      </select>
+      <button class="btn btn-primary" onclick="actualizarPreciosMasivo()">Aplicar aumento</button>
+    </div>
+
+    <div class="search-row">
+      <input type="text" class="search-input" id="buscar-producto" placeholder="🔍  Buscar producto..." oninput="filtrarProductos()">
+      <select class="search-input" id="filtro-cat" onchange="filtrarProductos()">
+        <option value="">Todas las categorías</option>
+      </select>
+      <button class="btn btn-primary" onclick="openModal('modal-nuevo-producto')">+ Nuevo producto</button>
+    </div>
+
+    <div class="pill-row" id="pills-categorias"></div>
+
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th style="text-align:right;">Precio venta</th>
+              <th style="text-align:right;">Costo</th>
+              <th style="text-align:right;">Margen</th>
+              <th>Stock mín.</th>
+              <th>Stock ideal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tabla-catalogo"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="text-align:center; font-size:14px; color:var(--muted); margin-top:8px;" id="catalogo-count"></div>
+  </div>
+
+  <!-- ===== PROVEEDORES ===== -->
+  <div class="panel" id="panel-proveedores">
+    <div class="section-title">Proveedores</div>
+    <div class="section-sub">Cargá listas de precios en imagen, PDF o texto. La IA extrae todo automáticamente.</div>
+
+    <div class="search-row">
+      <input type="text" class="search-input" id="buscar-proveedor" placeholder="🔍  Buscar proveedor..." oninput="filtrarProveedores()">
+      <button class="btn btn-primary" onclick="openModal('modal-nuevo-proveedor')">+ Nuevo proveedor</button>
+    </div>
+
+    <div id="lista-proveedores"></div>
+
+    <!-- SUBIR LISTA -->
+    <div class="card" id="subir-lista-section" style="display:none;">
+      <div class="card-title"><div class="dot"></div> Subir lista de precios</div>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+        Proveedor seleccionado: <strong id="proveedor-seleccionado-nombre" style="color:var(--text);"></strong>
+      </div>
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()" 
+           ondragover="event.preventDefault(); this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="handleDrop(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text"><strong>Hacé clic o arrastrá</strong> tu lista aquí</div>
+        <div class="upload-text" style="margin-top:4px; font-size:12px;">Imagen (JPG/PNG), PDF o pegar texto abajo</div>
+      </div>
+      <input type="file" id="file-input" accept="image/*,.pdf" style="display:none;" onchange="handleFileSelect(event)">
+
+      <div class="form-row">
+        <div class="form-label">O pegá el texto de la lista directamente</div>
+        <textarea class="form-input" id="texto-lista" rows="5" placeholder="Pegá acá el texto copiado de la lista del proveedor..." style="resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="procesarLista()">🤖 Procesar con IA</button>
+        <button class="btn btn-outline" onclick="cancelarSubida()">Cancelar</button>
+      </div>
+
+      <div id="procesando-lista" style="display:none;" class="loading">
+        <div class="spinner"></div> La IA está leyendo la lista y reconociendo productos...
+      </div>
+
+      <!-- MATCHES PENDIENTES -->
+      <div id="matches-section" style="display:none; margin-top:20px;">
+        <div class="card-title"><div class="dot" style="background:var(--warn);"></div> Coincidencias automáticas para revisar</div>
+        <div class="info-bar">⚠️ La IA detectó estas posibles equivalencias. Aprobá o rechazá cada una antes de guardar.</div>
+        <div id="lista-matches"></div>
+        <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="guardarListaAprobada()">✅ Confirmar y guardar lista</button>
+          <button class="btn btn-outline" onclick="aprobarTodos()">Aprobar todos</button>
+          <button class="btn btn-outline" onclick="rechazarTodos()">Rechazar todos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COMPARADOR ===== -->
+  <div class="panel" id="panel-comparador">
+    <div class="section-title">Comparador de precios</div>
+    <div class="section-sub">Compará precios entre proveedores y visualizá tu margen de ganancia.</div>
+
+    <div class="search-row">
+      <input type="text" class="search-input" id="buscar-comp" placeholder="🔍  Buscar producto..." oninput="filtrarComparador()">
+      <select class="search-input" id="filtro-cat-comp" onchange="filtrarComparador()">
+        <option value="">Todas las categorías</option>
+      </select>
+      <select class="search-input" id="filtro-prov-comp" onchange="filtrarComparador()">
+        <option value="">Todos los proveedores</option>
+      </select>
+    </div>
+
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="table-wrap">
+        <table id="tabla-comparador">
+          <thead id="comp-head">
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th style="text-align:right;">Precio venta</th>
+            </tr>
+          </thead>
+          <tbody id="comp-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="comp-empty" class="empty-state" style="display:none;">
+      <div class="icon">📊</div>
+      <p>Aún no hay listas de proveedores cargadas.<br>Andá a <strong>Proveedores</strong> para subir tu primera lista.</p>
+    </div>
+  </div>
+
+  <!-- ===== PEDIDOS ===== -->
+  <div class="panel" id="panel-pedidos">
+    <div class="section-title">Generador de pedidos</div>
+    <div class="section-sub">Creá pedidos por proveedor respetando stock mínimo e ideal.</div>
+
+    <div class="search-row">
+      <select class="search-input" id="pedido-proveedor" onchange="generarPedidoAuto()">
+        <option value="">Seleccioná un proveedor...</option>
+      </select>
+      <button class="btn btn-outline" onclick="generarPedidoAuto()">🔄 Recalcular</button>
+      <button class="btn btn-primary" onclick="abrirExportarPedido()">📤 Exportar pedido</button>
+    </div>
+
+    <div id="pedido-vacio" class="empty-state">
+      <div class="icon">🛒</div>
+      <p>Seleccioná un proveedor para generar el pedido automáticamente.</p>
+    </div>
+
+    <div id="pedido-contenido" style="display:none;">
+      <div class="info-bar" id="pedido-info-bar"></div>
+      <div id="lista-pedido"></div>
+
+      <div class="card">
+        <div class="card-title"><div class="dot"></div> Agregar producto manualmente</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <select class="form-input" id="pedido-prod-manual" style="flex:1; min-width:180px;">
+            <option value="">Seleccioná producto...</option>
+          </select>
+          <input type="number" class="form-input" id="pedido-cant-manual" placeholder="Cant." style="width:90px;" min="1">
+          <button class="btn btn-outline" onclick="agregarManual()">+ Agregar</button>
+        </div>
+      </div>
+
+      <div class="card" id="pedido-output-card" style="display:none;">
+        <div class="card-title"><div class="dot"></div> Texto del pedido (para WhatsApp o email)</div>
+        <div class="output-box" id="pedido-output-text"></div>
+        <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="copiarPedido()">📋 Copiar</button>
+          <button class="btn btn-outline" onclick="emailPedido()">📧 Abrir en Gmail</button>
+          <button class="btn btn-purple" onclick="exportarPDF()">📄 Exportar PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: Nuevo producto -->
+<div class="modal-bg" id="modal-nuevo-producto">
+  <div class="modal">
+    <div class="modal-title">+ Nuevo <span>producto</span></div>
+    <div class="form-row">
+      <div class="form-label">Nombre del producto</div>
+      <input type="text" class="form-input" id="np-nombre" placeholder="Ej: Lavandina 5L concentrada">
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <div class="form-label">Categoría</div>
+        <select class="form-input" id="np-cat"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Nueva categoría</div>
+        <input type="text" class="form-input" id="np-cat-nueva" placeholder="O escribí una nueva...">
+      </div>
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <div class="form-label">Precio de venta ($)</div>
+        <input type="number" class="form-input" id="np-precio" placeholder="0">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Costo ($)</div>
+        <input type="number" class="form-input" id="np-costo" placeholder="0">
+      </div>
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <div class="form-label">Stock mínimo</div>
+        <input type="number" class="form-input" id="np-stock-min" placeholder="0">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Stock ideal</div>
+        <input type="number" class="form-input" id="np-stock-ideal" placeholder="0">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-nuevo-producto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarNuevoProducto()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nuevo proveedor -->
+<div class="modal-bg" id="modal-nuevo-proveedor">
+  <div class="modal">
+    <div class="modal-title">+ Nuevo <span>proveedor</span></div>
+    <div class="form-row">
+      <div class="form-label">Nombre del proveedor</div>
+      <input type="text" class="form-input" id="prov-nombre" placeholder="Ej: Química Génesis">
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <div class="form-label">Teléfono / WhatsApp</div>
+        <input type="text" class="form-input" id="prov-tel" placeholder="+54 11 1234-5678">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Email</div>
+        <input type="email" class="form-input" id="prov-email" placeholder="proveedor@email.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-label">Notas (condiciones de pago, mínimo de compra, etc.)</div>
+      <textarea class="form-input" id="prov-notas" rows="2" placeholder="Ej: Pago a 30 días. Mínimo $50.000"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-nuevo-proveedor')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarNuevoProveedor()">Guardar proveedor</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Exportar pedido -->
+<div class="modal-bg" id="modal-exportar">
+  <div class="modal">
+    <div class="modal-title">📤 Exportar <span>pedido</span></div>
+    <div class="form-row">
+      <div class="form-label">Mensaje personalizado (opcional)</div>
+      <textarea class="form-input" id="export-mensaje" rows="2" placeholder="Ej: Hola! Te paso el pedido para esta semana."></textarea>
+    </div>
+    <div class="output-box" id="modal-output-text" style="margin: 12px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-exportar')">Cerrar</button>
+      <button class="btn btn-primary" onclick="copiarPedidoModal()">📋 Copiar texto</button>
+      <button class="btn btn-purple" onclick="exportarPDF()">📄 PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// DATOS
+// ==========================================
+
+const PRODUCTOS_INICIALES = [{"id":"64688AAE","nombre":"Bolson higienico New Pel 30Mx30un","categoria":"Art. de higiene","precio":11000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2DE50761","nombre":"New Pel cocina 360 (120x3)","categoria":"Sin categoría","precio":4200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"08154E9A","nombre":"Rollo higienico New Pel 30Mx1un","categoria":"Art. de higiene","precio":450.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BD88AE6D","nombre":"Rollo Cocina New Pel 200Px1un","categoria":"Art. de higiene","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CDFE2BCF","nombre":"Bolson higienico Renacer 100Mx30un","categoria":"Art. de higiene","precio":17500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"33668E49","nombre":"Bolson higienico Renacer 100Mx15un","categoria":"Art. de higiene","precio":8800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"48ADC9E8","nombre":"Rollo higienico Renacer 100Mx1un","categoria":"Art. de higiene","precio":750.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AA7AE7EA","nombre":"Bolson higienico Renacer 80Mx30un","categoria":"Art. de higiene","precio":14700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2CE9D46B","nombre":"Bolson higienico Renacer 80Mx15un","categoria":"Art. de higiene","precio":7400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E2341727","nombre":"Rollo higienico Renacer 80Mx1un","categoria":"Art. de higiene","precio":650.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"15C4DD08","nombre":"Bolson higienico Renacer 50Mx30un","categoria":"Art. de higiene","precio":12500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A0B0E741","nombre":"Bolson higienico Renacer 50Mx15un","categoria":"Art. de higiene","precio":6300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5CC6D334","nombre":"Rollo higienico Renacer 50Mx1un","categoria":"Art. de higiene","precio":550.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D90BB489","nombre":"Bolson cocina Renacer 200Px8un","categoria":"Art. de higiene","precio":13000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3F388FEB","nombre":"Rollo cocina Renacer 200Px1un","categoria":"Art. de higiene","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"67E45619","nombre":"Bolson higienico Panda 100Mx24un","categoria":"Art. de higiene","precio":21000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D17D0949","nombre":"Bolson higienico Panda 50Mx24un","categoria":"Art. de higiene","precio":14500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0268FDC6","nombre":"Bolson higienico Panda 50Mx12un","categoria":"Art. de higiene","precio":7500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"31E9118E","nombre":"Bolson higienico 151512 80Mx12un","categoria":"Art. de higiene","precio":9500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"39027DC4","nombre":"Bolson higienico Felpita 30Mx24un","categoria":"Art. de higiene","precio":9000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2DCF8A47","nombre":"Rollo cocina Felpita 200Px1un","categoria":"Sin categoría","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"70FE285D","nombre":"Molipel higenico S.H 30x4","categoria":"Sin categoría","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5DF5C81D","nombre":"Elegante higienico S.H 80x4","categoria":"Art. de higiene","precio":4200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2122F78B","nombre":"Elegante higienico Rinde Más D.H 30x4","categoria":"Sin categoría","precio":3750.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FB8739BA","nombre":"Elegante higienico D.H 30x4","categoria":"Art. de higiene","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B31D48FC","nombre":"Elegante higienico S.H 30X4","categoria":"Art. de higiene","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"8C516401","nombre":"Elegante higienico 50Mx24un","categoria":"Sin categoría","precio":16500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"969B0BAF","nombre":"Elegante cocina 60px3","categoria":"Art. de higiene","precio":2100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AC335C09","nombre":"Elegante cocina 50px3","categoria":"Art. de higiene","precio":1900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"093B449C","nombre":"Elegante cocina 360 (120x3)","categoria":"Art. de higiene","precio":4400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E4054767","nombre":"Elegante cocina 200p rollo","categoria":"Art. de higiene","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D406E868","nombre":"Sussex cocina 30px3","categoria":"Art. de higiene","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9B5B0CFF","nombre":"Cartabella cocina 40px3","categoria":"Art. de higiene","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B7646805","nombre":"Cartabella higienico S.H 30x4","categoria":"Art. de higiene","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1E1B7BAA","nombre":"Higienol higienico S.H 4x100m","categoria":"Art. de higiene","precio":5000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5413149E","nombre":"Higienol higienico S.H 4x30m","categoria":"Sin categoría","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1ADF6CD6","nombre":"Higienol higienico D.H 4x30m","categoria":"Art. de higiene","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C4191AA4","nombre":"Elite higienico D.H 4x30m","categoria":"Art. de higiene","precio":3200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D095D7EE","nombre":"Coloso higienico D.H 4X30m","categoria":"Art. de higiene","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D03EEB4A","nombre":"Coloso higienico S.H 4X30m","categoria":"Art. de higiene","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"90DF0688","nombre":"Coloso higienico S.H rollo 50m","categoria":"Art. de higiene","precio":0.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"21C3789B","nombre":"Júpiter higiénico S.H 30M","categoria":"Art. de higiene","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F1258403","nombre":"Campanita rollo cocina 200p","categoria":"Sin categoría","precio":1800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A4F30F8D","nombre":"Campanita S.H 30M","categoria":"Art. de higiene","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"70966097","nombre":"Sandi higienico rollo 30M","categoria":"Art. de higiene","precio":500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"474ADD86","nombre":"El coloso pañuelitos x6","categoria":"Art. de higiene","precio":1200.0,"costo":200.0,"stockMinimo":0,"stockIdeal":0},{"id":"8F57B6BB","nombre":"Elite pañuelitos x6","categoria":"Art. de higiene","precio":1600.0,"costo":300.0,"stockMinimo":0,"stockIdeal":0},{"id":"4C56ACDE","nombre":"Lavandina 5L clasica","categoria":"Desinfectante","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9AA85F42","nombre":"Lavandina 5L concentrado","categoria":"Desinfectante","precio":5300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D44A98D6","nombre":"Lavandina 2L","categoria":"Desinfectante","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E9625799","nombre":"Lavandina 1L","categoria":"Desinfectante","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BF9C33AE","nombre":"Lavandina Heroe 1L","categoria":"Desinfectante","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"246C53E1","nombre":"Lavandina en gel Heroe 700ml","categoria":"Desinfectante","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"06255053","nombre":"Lavandina Ayudin 1L","categoria":"Desinfectante","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7F1281EA","nombre":"Lavandina Ayudin 2L","categoria":"Desinfectante","precio":3100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C2CD3E86","nombre":"Lavandina en gel 1L","categoria":"Desinfectante","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3BB4D84F","nombre":"Lavandina en gel ½L","categoria":"Desinfectante","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B0D20DBF","nombre":"Cloro 5L","categoria":"Desinfectante","precio":5700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B2D478FC","nombre":"Desod. piso 5L","categoria":"Aromatizante","precio":4800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F05074C4","nombre":"Desod. piso 2L","categoria":"Aromatizante","precio":1800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"742126F3","nombre":"Desod. piso 1L","categoria":"Aromatizante","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AC9BC6F6","nombre":"Desod. piso concentrado ¼ rinde 10L","categoria":"Aromatizante","precio":7500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"6AB179CC","nombre":"Desod. piso concentrado 1⁄8 rinde 5L","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"83D1F967","nombre":"Jabon p/ropa T/Ariel 5L","categoria":"Detergente","precio":8800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"95C6EE50","nombre":"Jabon p/ropa T/Ariel 1L","categoria":"Detergente","precio":2800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D48DC7BD","nombre":"Jabon p/ropa T/Skip 5L","categoria":"Detergente","precio":7700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"89826903","nombre":"Jabon p/ropa T/Skip 1L","categoria":"Detergente","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4B4DDC8B","nombre":"Jabon p/ropa T/Querubín 5L","categoria":"Detergente","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7BBC2BE7","nombre":"Jabon p/ropa T/Ace 5L","categoria":"Sin categoría","precio":0.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"36EFD76F","nombre":"Jabon p/ropa T/Ace 1L","categoria":"Sin categoría","precio":0.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BBF15FC8","nombre":"Jabon DUO 1L","categoria":"Detergente","precio":3100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EC1249B8","nombre":"Suavizante T/Comfort 5L","categoria":"Limpieza","precio":9700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2D500FB5","nombre":"Suavizante T/Comfort 1L","categoria":"Limpieza","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"42018100","nombre":"Suavizante T/Vivex 5L","categoria":"Limpieza","precio":9700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7E5FF823","nombre":"Suavizante T/Vivex 1L","categoria":"Limpieza","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D0B97EB9","nombre":"Suavizante ultra celeste 5L","categoria":"Limpieza","precio":8200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E27D48AE","nombre":"Suavizante ultra celeste 2L","categoria":"Limpieza","precio":4600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"06E8CBC9","nombre":"Suavizante ultra violeta 5L","categoria":"Limpieza","precio":8000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"64BF21CF","nombre":"Suavizante ultra violeta 1L","categoria":"Limpieza","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A5284F6E","nombre":"Suavizante clásico celeste 5L","categoria":"Limpieza","precio":7000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2EDCEF4B","nombre":"Suavizante clásico celeste 1L","categoria":"Limpieza","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2674B6DB","nombre":"Suavizante clásico rosa 5L","categoria":"Limpieza","precio":7700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0E8B521D","nombre":"Suavizante clásico rosa 1L","categoria":"Limpieza","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7EA71861","nombre":"Suavizante triple fragancia 5L","categoria":"Limpieza","precio":7700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3958C3CD","nombre":"Suavizante ropa fina 1L","categoria":"Limpieza","precio":2900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F0F85126","nombre":"Quitamancha 1L","categoria":"Lavanderia","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AC515941","nombre":"Lavandina ropa blanca 1L","categoria":"Blanqueador","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A74ABA5B","nombre":"Lavandina ropa color 1L","categoria":"Lavanderia","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D79E3267","nombre":"Detergente T/Magistral 5L","categoria":"Detergente","precio":13500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9D4C213B","nombre":"Detergente T/Magistral 1L","categoria":"Detergente","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F2D841F6","nombre":"Detergente T/Magistral ½L","categoria":"Detergente","precio":1800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9E61F9C9","nombre":"Detergente limón ultra 5L","categoria":"Detergente","precio":9500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"89BBDCC2","nombre":"Detergente limón ultra 1L","categoria":"Detergente","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"19EA74DB","nombre":"Detergente limón ultra ½L","categoria":"Detergente","precio":1450.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E35E1F96","nombre":"Detergente manzana 5L","categoria":"Detergente","precio":9000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F395D4C8","nombre":"Detergente manzana 1L","categoria":"Detergente","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9F756C11","nombre":"Detergente manzana ½L","categoria":"Detergente","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"299C7734","nombre":"Detergente neutro 1L","categoria":"Detergente","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2915F65A","nombre":"Jabon de manos 5L","categoria":"Higiene","precio":15000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FB36A725","nombre":"Jabon de manos 1L","categoria":"Higiene","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3C2D4E91","nombre":"Jabon de manos ½L","categoria":"Higiene","precio":1750.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"575F283E","nombre":"Aromatizante textil ½L","categoria":"Perfume ropa","precio":3800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C28A5C67","nombre":"Aromatizante textil ¼L","categoria":"Perfume ropa","precio":1750.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5F3A2C40","nombre":"Shampoo/auto 1L","categoria":"Cuidado","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AE3BC3F1","nombre":"Shampoo p/auto ½L","categoria":"Cuidado","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EDD2AF36","nombre":"Limpia vidrios 1L","categoria":"Sin categoría","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"38D6E244","nombre":"Antigrasa multiuso 1L","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2423AD0D","nombre":"Desengrasante c/amoníaco 1L","categoria":"Sin categoría","precio":3200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"66580425","nombre":"Gel desengrasante ½L","categoria":"Sin categoría","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C448A6CC","nombre":"Gel desengrasante 1L","categoria":"Sin categoría","precio":3400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0FC9814D","nombre":"T/Cif 1L","categoria":"Sin categoría","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7ABB9E14","nombre":"T/Cif ½L","categoria":"Sin categoría","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FA0C00E9","nombre":"T/Cif baño","categoria":"Sin categoría","precio":0.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A04D31EF","nombre":"Desengrasante industrial 1L","categoria":"Sin categoría","precio":3400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"12A554A6","nombre":"Quita sarro 1L","categoria":"Sin categoría","precio":3800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7658F78D","nombre":"Derribante ½L","categoria":"Sin categoría","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3039F26A","nombre":"Acaroina 1L","categoria":"Sin categoría","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"86574325","nombre":"Cera negra 1L","categoria":"Sin categoría","precio":3300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CABC5A15","nombre":"Cera roja 1L","categoria":"Sin categoría","precio":3300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E088AD4D","nombre":"Cera natural 1L","categoria":"Sin categoría","precio":3300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4B927596","nombre":"Cera acrílica 1L","categoria":"Sin categoría","precio":3300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"87B5B42E","nombre":"Echo Balde 1L","categoria":"Sin categoría","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"317560C0","nombre":"Alguicida 1L","categoria":"Sin categoría","precio":4000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0EF69E03","nombre":"Clarificador 1L","categoria":"Sin categoría","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"57E10079","nombre":"Ácido muriático p/pileta 1L","categoria":"Sin categoría","precio":4200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EEEF1041","nombre":"Cloro granulado 1kg","categoria":"Sin categoría","precio":10500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"88CF463A","nombre":"Limpiador cremoso Mr Musculo 450 ml","categoria":"Sin categoría","precio":3400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"00D53BC6","nombre":"Limpiador cremoso Cif 250 ml","categoria":"Sin categoría","precio":2200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"89FC2C7D","nombre":"Limpiador cremoso Cif 750 ml","categoria":"Sin categoría","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9D1F3FCB","nombre":"Gel desinfectante Cif 250 gr","categoria":"Sin categoría","precio":2100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C42D1B1D","nombre":"Detergente lavavajilla Idefix III 750 ml","categoria":"Sin categoría","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F86B35B4","nombre":"Abrillantador Idefix III 375 ml","categoria":"Sin categoría","precio":7500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"841971C9","nombre":"Limpiador multiuso Idefix III 500 ml","categoria":"Sin categoría","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E3201EB2","nombre":"Limpiador cocina Ayudín 500 ml","categoria":"Sin categoría","precio":4000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"05E061D0","nombre":"Limpia hornos Max Aroma 343 ml (aerosol)","categoria":"Sin categoría","precio":5000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B0B20411","nombre":"Multisuperficies y electronicos Blem 450 ml","categoria":"Sin categoría","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"91CD7E34","nombre":"Limpia lustramueble aerosol Blem","categoria":"Sin categoría","precio":4600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2E98AF4A","nombre":"Lustramueble gatillo Cif","categoria":"Sin categoría","precio":5000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BC5EEF98","nombre":"Limpia vidrios Cif 450 ml","categoria":"Sin categoría","precio":2050.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"08B4E1C1","nombre":"Limpia baño Cif 450 ml","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1810CA47","nombre":"Antigrasa Cif 450 ml","categoria":"Sin categoría","precio":2200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FFAA60C0","nombre":"Limpieza+desinfectante Cif 450 ml","categoria":"Sin categoría","precio":2560.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"404A8436","nombre":"Lavandina anti-splash Ayudín 1L","categoria":"Sin categoría","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F3210070","nombre":"Lavandina Odex 1L","categoria":"Sin categoría","precio":800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B1C605EC","nombre":"Amoniaco Odex 900 ml","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1B737823","nombre":"Desodorante piso Odex 900 ml","categoria":"Sin categoría","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7B4F52E1","nombre":"Desodorante piso Procenex 900 ml","categoria":"Sin categoría","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E48709D2","nombre":"Desinfectante piso Procenex 900 ml","categoria":"Sin categoría","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E84BC3F5","nombre":"Desodorante piso Poett 900 ml","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7DBDF35E","nombre":"Quita manchas ropa blanco supremo Ayudín 400 ml","categoria":"Sin categoría","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"92F44B25","nombre":"Talco desodorante perfumado Algabo 200 gr","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"85B9A64B","nombre":"Desodorante corporal Rexona odorono 150 ml","categoria":"Sin categoría","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9122DC48","nombre":"Apresto Coloso aerosol 360 ml","categoria":"Sin categoría","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FCDF68B5","nombre":"Jabon polvo Ala 800 gr","categoria":"Sin categoría","precio":3200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7E6F3721","nombre":"Jabon polvo Ala 400 gr","categoria":"Sin categoría","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"577F15E8","nombre":"Jabon polvo El Coloso 800 gr","categoria":"Sin categoría","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"26544331","nombre":"Jabon polvo El Coloso 400 gr","categoria":"Sin categoría","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"92AEFF80","nombre":"Jabon polvo Querubín 400 gr","categoria":"Sin categoría","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"60D006F5","nombre":"Jabon polvo Zorro 400 gr","categoria":"Sin categoría","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"32312DA4","nombre":"Jabon polvo Prix 400 gr","categoria":"Sin categoría","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D05D045B","nombre":"Jabon polvo Gramby 800 gr","categoria":"Sin categoría","precio":2900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5189D8D0","nombre":"Jabon corporal cannabis 90g","categoria":"Sin categoría","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D68EB2E7","nombre":"Trapo Piso Textil Dome Gris EG 60x70cm","categoria":"Trapos de piso","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"677A4213","nombre":"Trapo Piso Textil Dome Blanco 60x70cm","categoria":"Trapos de piso","precio":2100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"DF591CF6","nombre":"Trapo Piso El Coloso Blanco 48x60cm","categoria":"Trapos de piso","precio":2800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BF61D6C4","nombre":"Trapo Piso Mister Trapo Gris 62x48cm","categoria":"Trapos de piso","precio":900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"DF4584FE","nombre":"Trapo Piso Mister Trapo Blanco 62x48cm","categoria":"Trapos de piso","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"002B6243","nombre":"Trapo Piso Julieta 50x60cm","categoria":"Trapos de piso","precio":800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"241B5B5C","nombre":"Trapo Piso Premier 50x60cm","categoria":"Trapos de piso","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2ADA9207","nombre":"Trapo Piso Arlequin Blanco 68x58cm","categoria":"Trapos de piso","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4066BD51","nombre":"Trapo Piso Arlequin Rosa 46x58cm","categoria":"Trapos de piso","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2A7DF5A2","nombre":"Trapo Piso Costero Gris 47x57cm","categoria":"Trapos de piso","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"95066DCA","nombre":"Rejilla Buena Mandarina Doble 46x63cm","categoria":"Rejillas","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5208CB78","nombre":"Rejilla Buena Mandarina Doble 40x52cm","categoria":"Rejillas","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5B438972","nombre":"Rejilla Buena Mandarina Lavavajilla 32x50cm","categoria":"Rejillas","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"ED15CDF0","nombre":"Rejilla Buena Mandarina pabilo 38x40","categoria":"Rejillas","precio":800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A5AAABB3","nombre":"Rejilla Don Bosco pabilo 35x42","categoria":"Rejillas","precio":500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F14C5902","nombre":"Rejilla El Coloso 38x44cm","categoria":"Rejillas","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F4D6187E","nombre":"Rejilla Josmar Doble Pabilo","categoria":"Rejillas","precio":700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C2DD875A","nombre":"Rejilla Coche Pesada 47x55cm","categoria":"Rejillas","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E57059CE","nombre":"Rejilla Ranchera p/Autos 44x58cm","categoria":"Rejillas","precio":3200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4F25D711","nombre":"Paño Amarillo","categoria":"Paños","precio":650.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FD95D9A3","nombre":"Mopa ballerina Duramás","categoria":"Mopa","precio":4600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"80CDE061","nombre":"Mopa ballerina Romly","categoria":"Mopa","precio":4600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"94A863F9","nombre":"Mopa algodon Romly","categoria":"Mopa","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B340DEBD","nombre":"Josmar Franela","categoria":"Franelas","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E6B23D2B","nombre":"Escoba Juventus","categoria":"Escobas","precio":4600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E5DAB14F","nombre":"Escoba Bambino","categoria":"Escobas","precio":4300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0F429EEC","nombre":"Escobillon Pampa","categoria":"Escobas","precio":3600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"01E84173","nombre":"Barrendero Grande","categoria":"Escobas","precio":13500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A1FCC345","nombre":"Cabo largo 2M","categoria":"Art. de Limpieza","precio":3800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"55066B2C","nombre":"Cabo mediano 1.5M","categoria":"Art. de Limpieza","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D11C086A","nombre":"Cabo chico 1.20M","categoria":"Art. de Limpieza","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FDD6F10E","nombre":"Cepillo Camion Mano","categoria":"Cepillos","precio":3700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B53D1469","nombre":"Cepillo Camion Grande","categoria":"Cepillos","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FFDDE988","nombre":"Cepillo Piso Gigante","categoria":"Cepillos","precio":4000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2AC826DB","nombre":"Cepillo Techo","categoria":"Cepillos","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"26D68BB9","nombre":"Cepillo inodoro c/vaso","categoria":"Cepillos","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C1813829","nombre":"Cepillo Inodoro","categoria":"Cepillos","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F87A2227","nombre":"Cepillo Inodoro Gauchita","categoria":"Cepillos","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CFD93C28","nombre":"Cepillo Espalda","categoria":"Cepillos","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"875233DB","nombre":"Cepillo Planchita Verde","categoria":"Cepillos","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1DB90A2E","nombre":"Cepillo Planchita Naranja","categoria":"Cepillos","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"84FB8189","nombre":"Cepillo Limpia Botella","categoria":"Cepillos","precio":3200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B1E978EC","nombre":"Asapractic Cepillo de Baño","categoria":"Cepillos","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3DFAFBA5","nombre":"Cepillo Dental Good Max","categoria":"Cepillos","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3D6A6951","nombre":"Virulana Multiuso","categoria":"Esponjas","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CE631C8F","nombre":"Virulana Cuadraditos","categoria":"Esponjas","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A03D42E5","nombre":"Virulana Esponja Acero","categoria":"Esponjas","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"98EF132B","nombre":"Lana Acero Virulana x6","categoria":"Esponjas","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E2755D41","nombre":"Lana Acero Virulana x10","categoria":"Esponjas","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BAD2B02F","nombre":"Mortimer Cuadriculada Esponja","categoria":"Esponjas","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D0A547CB","nombre":"Mortimer Esponja Doble Cara","categoria":"Esponjas","precio":500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"51B1ABDF","nombre":"El Coloso Economica Esponja","categoria":"Esponjas","precio":500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"41DA7723","nombre":"El Coloso Multiuso Esponja","categoria":"Esponjas","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"682E0DD1","nombre":"El Coloso Teflon Esponja","categoria":"Esponjas","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"16897A24","nombre":"El Coloso Acero Esponja","categoria":"Esponjas","precio":500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"59527E1B","nombre":"El Coloso Inoxidable","categoria":"Esponjas","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A1A174E2","nombre":"El Coloso Bronce","categoria":"Esponjas","precio":1100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"09DF1500","nombre":"Lana Acero El Coloso x6","categoria":"Esponjas","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0A6C3DB8","nombre":"Lana Acero El Coloso x10","categoria":"Esponjas","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7B5A16B1","nombre":"Flexol Esponja Multiuso","categoria":"Esponjas","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C04D0CA4","nombre":"Esponja Baño Boob Linea Spa","categoria":"Esponjas","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EA713374","nombre":"Harpic Pastilla Perfumada Lavanda","categoria":"Limpieza baño","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BFC2FA98","nombre":"Mr. Gold Pastilla","categoria":"Limpieza baño","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9EE75DC0","nombre":"Pato Bloque Adhesivo x3","categoria":"Limpieza baño","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"9E945B5B","nombre":"Pastilla Pato Purific","categoria":"Limpieza baño","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"703A4E09","nombre":"Pato/Ayudin Bloque","categoria":"Limpieza baño","precio":4700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"169D34A8","nombre":"Harpic Removedor de Sarro 100%","categoria":"Limpieza baño","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2BA1F012","nombre":"Destapacañeria Merclin 500ml","categoria":"Limpieza baño","precio":5500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"49A6E532","nombre":"Ceramicol Autobrillo Incoloro","categoria":"Limpieza baño","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7731A6AA","nombre":"Repuesto Suiza Autobrillo Rojo","categoria":"Limpieza baño","precio":1900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"79C8D93F","nombre":"Acondicionador p/Pisos Suiza","categoria":"Limpieza baño","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C3FF3A6D","nombre":"Brilla metal Brasso","categoria":"Limpieza baño","precio":3400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CE117810","nombre":"Limpia Metal Rex","categoria":"Limpieza baño","precio":3700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0FBABFFB","nombre":"Max Aroma Limpia Horno","categoria":"Limpieza baño","precio":5000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4B0D8704","nombre":"Merclin Limpia Hornos 250ml","categoria":"Limpieza baño","precio":4700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B7D0EC1A","nombre":"Merclin Limpia Hornos 500ml","categoria":"Limpieza baño","precio":9900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"67E656CC","nombre":"Desodorante Ambiente Glade Aerosol","categoria":"Ambientadores","precio":3400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4EC5505B","nombre":"Glade Caja","categoria":"Ambientadores","precio":1100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"24FF823C","nombre":"Glade Pasta","categoria":"Ambientadores","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2ED03E74","nombre":"Desodorante Ambiente Poett Aerosol","categoria":"Ambientadores","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EB8C1CA1","nombre":"Sahumerios De la India","categoria":"Sahumerios","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C4627CD4","nombre":"Ambar aromatizante textil","categoria":"Ambientadores","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0918A4EE","nombre":"Textil Home Fragancia 1/2L","categoria":"Ambientadores","precio":4800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"17DE59C7","nombre":"Esencia Citronella Pulverizador","categoria":"Ambientadores","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3621E487","nombre":"Esencia Citronella Chico","categoria":"Ambientadores","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"76EA7AD3","nombre":"Dispensor aerosol automatico","categoria":"Sin categoría","precio":16500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"72917E49","nombre":"Aromatizante textil Saphirus","categoria":"Ambientadores","precio":2900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1A62267D","nombre":"Hormiguicida cebo Hormicygon P","categoria":"Hormiguicidas","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4C4230BA","nombre":"Insecticida Mosquitrap","categoria":"Insecticidas","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7AD1004E","nombre":"Insecticida Raid Amarillo","categoria":"Insecticidas","precio":10000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5E1C81A9","nombre":"Insecticida Raid Naranja Jardin","categoria":"Insecticidas","precio":10500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"40391C77","nombre":"Insecticida Raid S/olor","categoria":"Insecticidas","precio":10500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"19617581","nombre":"Insecticida Raid Azul","categoria":"Insecticidas","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1683134D","nombre":"Insecticida Raid Negro","categoria":"Insecticidas","precio":6000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FC57426E","nombre":"Insecticida Selton Mosquitos","categoria":"Insecticidas","precio":4600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F2D66820","nombre":"Insecticida Selton Cucarachas","categoria":"Insecticidas","precio":4800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"122AB20F","nombre":"Insecticida Fuyi","categoria":"Insecticidas","precio":4800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3C7F6EB4","nombre":"Insecticida Baygon","categoria":"Insecticidas","precio":4800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"19A102C2","nombre":"Raid Espirales 12 Noches","categoria":"Insecticidas","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"59713CAC","nombre":"Aerosol Desinfectante Ayudin","categoria":"Desinfectantes","precio":2300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"540FE421","nombre":"Aerosol Desinfectante Lysoform","categoria":"Desinfectantes","precio":3800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5E94D872","nombre":"Aerosol Desinfectante 911","categoria":"Desinfectantes","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"DF2D0036","nombre":"Alcohol 96% 1/2L","categoria":"Alcohol","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"39574464","nombre":"Alcohol en Gel Beauty Hands","categoria":"Alcohol","precio":1300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"6E2F26BF","nombre":"Alcohol Aerosol 911 Sanitizante 70%","categoria":"Alcohol","precio":2800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"58667E57","nombre":"Ayudin Antigrasa Gatillo","categoria":"Desinfectantes","precio":2800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"633841D6","nombre":"Antigrasa Idefix gatillo","categoria":"Sin categoría","precio":2700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"22C7DB3F","nombre":"Desodorante Aerosol Nevona","categoria":"Desinfectantes","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BBA925BD","nombre":"Detergente Heroe 750ml","categoria":"Detergente","precio":2100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"005A9ABA","nombre":"Detergente Heroe Ultra 300ml","categoria":"Detergente","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"91E838BB","nombre":"Detergente Ultra Unilac 300ml","categoria":"Detergente","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"6C3D6ACF","nombre":"Detergente Ultra Unilac 800ml","categoria":"Detergente","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D26F05BD","nombre":"Det. p/platos Zorro 750ml","categoria":"Detergente","precio":2800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F67E6180","nombre":"Det. Magistral 215ml","categoria":"Detergente","precio":2100.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"E0002FBF","nombre":"Det. Magistral 500ml","categoria":"Detergente","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"68ED7288","nombre":"Det. Cif 300ml","categoria":"Detergente","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"53CFC509","nombre":"Det. Cif 500ml","categoria":"Detergente","precio":2200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"361F1EBD","nombre":"Det. Ala 500ml","categoria":"Detergente","precio":2400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0F8206E7","nombre":"Jabon pan Federal","categoria":"Jabón de pan","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B132086D","nombre":"Jabon pan Sesame","categoria":"Jabón de pan","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C1790F21","nombre":"Jabon pan Gigante","categoria":"Jabón de pan","precio":900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"2EE7F345","nombre":"Jabon pan Zorro Clásico","categoria":"Jabón de pan","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"678E9287","nombre":"Jabon pan Plus","categoria":"Jabón de pan","precio":600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BBD0592F","nombre":"Jabon pan Cosquin","categoria":"Jabón de pan","precio":900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"DD8820BC","nombre":"Jabon pan Ala","categoria":"Jabón de pan","precio":1250.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"72A7BDFA","nombre":"Talco Party","categoria":"Higiene personal","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"587EE60D","nombre":"Algodón Estrella Clasico","categoria":"Higiene personal","precio":900.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"88B22D85","nombre":"Hisopo Simply 200u","categoria":"Higiene personal","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"643E0A59","nombre":"Shampoo Plusbelle","categoria":"Higiene personal","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B5191955","nombre":"Shampoo Sedal","categoria":"Higiene personal","precio":4000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A672DF9E","nombre":"Jabon corporal Dove 90g","categoria":"Higiene personal","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"71F43EA9","nombre":"Shampoo t/Dove 1L","categoria":"Higiene personal","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"906BFA1C","nombre":"Acondicionador Sedal","categoria":"Higiene personal","precio":4000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1F09FA42","nombre":"Acondicionador Suave","categoria":"Higiene personal","precio":3400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EAAE6536","nombre":"Acondicionador Plusbelle","categoria":"Higiene personal","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"99D17001","nombre":"Acondicionador t/Dove 1L","categoria":"Higiene personal","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"3E4C2DB8","nombre":"Toallitas Siempre Libre","categoria":"Higiene personal","precio":3000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A5EBFF37","nombre":"Toallitas Simply","categoria":"Higiene personal","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F1F7DCD6","nombre":"Toallita Calipso Violeta","categoria":"Higiene personal","precio":1700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"8D37A640","nombre":"Toallita Calipso Verde","categoria":"Higiene personal","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"63C0AF63","nombre":"Toallita Calipso Nocturna Violeta","categoria":"Higiene personal","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"BA0B84AB","nombre":"Protector Calipso Normal","categoria":"Higiene personal","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"C13CD4B5","nombre":"Protector Calipso Multiestilo","categoria":"Higiene personal","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"024E8C2B","nombre":"Piedra Pomez","categoria":"Higiene personal","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1B717920","nombre":"Off! Family Crema Repelente chico","categoria":"Higiene personal","precio":2600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CF2B7297","nombre":"Off! Family Crema Repelente grande","categoria":"Higiene personal","precio":4200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"FB964285","nombre":"Colgate dental 70gr","categoria":"Sin categoría","precio":2200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"072E516B","nombre":"Colgate Kids Gel Dental","categoria":"Higiene personal","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CAB9ECD5","nombre":"Odolito Crema Dental Niños","categoria":"Higiene personal","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B933A65B","nombre":"Maq. Afeitar Gillette Prestobarba 2 x12","categoria":"Higiene personal","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D6331CCB","nombre":"Nastalina Bolsita","categoria":"Higiene personal","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"32BA9C44","nombre":"Bolsa Arteplast 45x60","categoria":"Bolsas","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B0B69EEF","nombre":"Bolsa Arteplast 50x70","categoria":"Bolsas","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"42FA5B30","nombre":"Bolsa Arteplast 60x90","categoria":"Bolsas","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7E200C15","nombre":"Bolsa Arteplast 80x100","categoria":"Bolsas","precio":3300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F2DB50AD","nombre":"Bolsa Arteplast 80x110","categoria":"Bolsas","precio":3700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"359C2F59","nombre":"Bolsa Arteplast 90x110","categoria":"Bolsas","precio":4500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AAA6686B","nombre":"Bolsas Consorcio 90x120 c/u","categoria":"Bolsas","precio":1000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"A51C83F4","nombre":"Pañuelos El Coloso x6","categoria":"Pañuelos","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1F82EA81","nombre":"Pañuelos El Coloso c/u","categoria":"Pañuelos","precio":200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"DC7C1448","nombre":"Pañuelos Elite x6","categoria":"Pañuelos","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D2A47634","nombre":"Pañuelos Elite c/u","categoria":"Pañuelos","precio":300.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4716C18D","nombre":"Rollo cocina Duplex 40x3","categoria":"Sin categoría","precio":1600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"8BC8A8C7","nombre":"Rollo cocina Celestial 40px3","categoria":"Sin categoría","precio":1400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"88D2824C","nombre":"Rollo Cocina Siyi 50 paños","categoria":"Rollo cocina","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"18E3BE0C","nombre":"Velas Relieve","categoria":"Velas","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"CF715DC6","nombre":"Velas Cortas El Coloso","categoria":"Velas","precio":800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"48A36D55","nombre":"Velas Largas El Coloso","categoria":"Velas","precio":1800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"7A39A2F8","nombre":"Coloso Manrow Pomada Calzado","categoria":"Pomada","precio":1800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"35F2F024","nombre":"Pomada Wassington Marrón","categoria":"Pomada","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B60AF360","nombre":"Azufre suelto El Coloso c/u","categoria":"Varios","precio":400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"09BDDAC0","nombre":"Rollo Hilo c/u","categoria":"Varios","precio":350.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4D7231A1","nombre":"Pack agujas x12 Light Hand","categoria":"Varios","precio":1200.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4BD304B2","nombre":"Pack agujas x16 Regal","categoria":"Varios","precio":500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"EDC294B4","nombre":"Kit de agujas Household Repair","categoria":"Varios","precio":650.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"072C01A8","nombre":"Bombillas Josmar","categoria":"Varios","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"36A3E8E1","nombre":"Bombillas Color","categoria":"Varios","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"D8E530A0","nombre":"El Coloso guantes","categoria":"Varios","precio":3600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F02CE3AE","nombre":"Mapa guantes cocina","categoria":"Varios","precio":4700.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"F6F7EA7A","nombre":"Prix guantes cocina","categoria":"Varios","precio":2500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"5C048F84","nombre":"Make guantes cocina","categoria":"Varios","precio":2800.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"B9F16B31","nombre":"Romly guantes cocina","categoria":"Varios","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"50CD7D82","nombre":"bicarbonato de sodio ½kg","categoria":"Varios","precio":4000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"0D2FF70D","nombre":"Gatillo p/pulverizador 1L","categoria":"Varios","precio":600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"55ED6F63","nombre":"Limpia tapizado aerosol","categoria":"Sin categoría","precio":5500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"4D2BA6C9","nombre":"Envase pulverizador 1L","categoria":"Varios","precio":400.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"AAC292B5","nombre":"Encendedor","categoria":"Sin categoría","precio":600.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"00EF2922","nombre":"Fosforos","categoria":"Sin categoría","precio":1500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"814C07ED","nombre":"Secador de goma 30 cm","categoria":"Sin categoría","precio":2000.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0},{"id":"1733560F","nombre":"Secador de goma 50 cm","categoria":"Sin categoría","precio":3500.0,"costo":0.0,"stockMinimo":0,"stockIdeal":0}];
+
+// ==========================================
+// STATE
+// ==========================================
+let productos = JSON.parse(localStorage.getItem('productos_v1') || 'null') || JSON.parse(JSON.stringify(PRODUCTOS_INICIALES));
+let proveedores = JSON.parse(localStorage.getItem('proveedores_v1') || '[]');
+let listasProveedores = JSON.parse(localStorage.getItem('listas_v1') || '{}'); // {provId: [{nombre, precio, unidad, categoria}]}
+let matchesAprobados = JSON.parse(localStorage.getItem('matches_v1') || '{}'); // {provId: {nombreProv: productoId}}
+let pedidoActual = []; // [{productoId, cantidad, precioElegido, proveedorId}]
+let proveedorSeleccionadoId = null;
+let matchesPendientes = []; // para revisar
+
+function save() {
+  localStorage.setItem('productos_v1', JSON.stringify(productos));
+  localStorage.setItem('proveedores_v1', JSON.stringify(proveedores));
+  localStorage.setItem('listas_v1', JSON.stringify(listasProveedores));
+  localStorage.setItem('matches_v1', JSON.stringify(matchesAprobados));
+}
+
+// ==========================================
+// UTILS
+// ==========================================
+function pesos(n) { return '$' + Math.round(n).toLocaleString('es-AR'); }
+function uid() { return Math.random().toString(36).substr(2,8).toUpperCase(); }
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function getCategorias() {
+  return [...new Set(productos.map(p => p.categoria))].sort();
+}
+
+// ==========================================
+// INIT
+// ==========================================
+function init() {
+  poblarFiltros();
+  renderCatalogo();
+  renderProveedores();
+  renderComparador();
+  renderPedidoProveedores();
+  updateStats();
+}
+
+function poblarFiltros() {
+  const cats = getCategorias();
+  ['filtro-cat','filtro-cat-comp','np-cat','precio-categoria'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value;
+    el.innerHTML = '<option value="">Todas las categorías</option>';
+    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; el.appendChild(o); });
+    el.value = val;
+  });
+
+  // pills
+  const pillsEl = document.getElementById('pills-categorias');
+  if (pillsEl) {
+    pillsEl.innerHTML = '';
+    const allPill = document.createElement('div');
+    allPill.className = 'pill active'; allPill.textContent = 'Todos';
+    allPill.onclick = () => { document.querySelectorAll('.pill').forEach(p => p.classList.remove('active')); allPill.classList.add('active'); document.getElementById('filtro-cat').value = ''; filtrarProductos(); };
+    pillsEl.appendChild(allPill);
+    cats.forEach(c => {
+      const pill = document.createElement('div');
+      pill.className = 'pill'; pill.textContent = c;
+      pill.onclick = () => { document.querySelectorAll('.pill').forEach(p => p.classList.remove('active')); pill.classList.add('active'); document.getElementById('filtro-cat').value = c; filtrarProductos(); };
+      pillsEl.appendChild(pill);
+    });
+  }
+
+  // pedido manual
+  const manualSel = document.getElementById('pedido-prod-manual');
+  if (manualSel) {
+    manualSel.innerHTML = '<option value="">Seleccioná producto...</option>';
+    productos.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.nombre; manualSel.appendChild(o); });
+  }
+}
+
+function updateStats() {
+  const conCosto = productos.filter(p => p.costo > 0).length;
+  const margenes = productos.filter(p => p.costo > 0 && p.precio > 0).map(p => (p.precio - p.costo) / p.precio * 100);
+  const avgMargen = margenes.length ? (margenes.reduce((a,b) => a+b,0) / margenes.length) : 0;
+  const sinPrecio = productos.filter(p => !p.precio || p.precio === 0).length;
+  document.getElementById('stat-total').textContent = productos.length;
+  document.getElementById('stat-con-costo').textContent = conCosto;
+  document.getElementById('stat-margen').textContent = avgMargen ? avgMargen.toFixed(1) + '%' : '—';
+  document.getElementById('stat-sin-precio').textContent = sinPrecio;
+}
+
+// ==========================================
+// CATÁLOGO
+// ==========================================
+function filtrarProductos() {
+  const q = document.getElementById('buscar-producto').value.toLowerCase();
+  const cat = document.getElementById('filtro-cat').value;
+  renderCatalogo(q, cat);
+}
+
+function renderCatalogo(q='', cat='') {
+  const tbody = document.getElementById('tabla-catalogo');
+  const filtrados = productos.filter(p => {
+    const matchQ = !q || p.nombre.toLowerCase().includes(q);
+    const matchCat = !cat || p.categoria === cat;
+    return matchQ && matchCat;
+  });
+
+  tbody.innerHTML = filtrados.map(p => {
+    const margen = p.costo > 0 && p.precio > 0 ? ((p.precio - p.costo) / p.precio * 100).toFixed(1) + '%' : '—';
+    const margenClass = p.costo > 0 ? (p.precio > p.costo ? 'green' : 'red') : '';
+    return `<tr>
+      <td style="font-weight:500; max-width:220px; word-break:break-word;">${p.nombre}</td>
+      <td><span class="badge">${p.categoria}</span></td>
+      <td style="text-align:right;">
+        <input class="editable" type="number" value="${p.precio}" onchange="actualizarCampo('${p.id}','precio',this.value)" title="Editar precio">
+      </td>
+      <td style="text-align:right;">
+        <input class="editable" type="number" value="${p.costo}" onchange="actualizarCampo('${p.id}','costo',this.value)" title="Editar costo">
+      </td>
+      <td style="text-align:right;"><span class="badge ${margenClass}">${margen}</span></td>
+      <td><input class="editable" type="number" value="${p.stockMinimo}" onchange="actualizarCampo('${p.id}','stockMinimo',this.value)" style="width:65px;" title="Stock mínimo"></td>
+      <td><input class="editable" type="number" value="${p.stockIdeal}" onchange="actualizarCampo('${p.id}','stockIdeal',this.value)" style="width:65px;" title="Stock ideal"></td>
+      <td><button class="btn btn-sm btn-outline" onclick="eliminarProducto('${p.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('catalogo-count').textContent = `Mostrando ${filtrados.length} de ${productos.length} productos`;
+  updateStats();
+}
+
+function actualizarCampo(id, campo, valor) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  p[campo] = parseFloat(valor) || 0;
+  save();
+  updateStats();
+  sincronizarConLocales(id, campo, p[campo]);
+}
+
+function actualizarPreciosMasivo() {
+  const pct = parseFloat(document.getElementById('precio-pct').value);
+  const cat = document.getElementById('precio-categoria').value;
+  if (!pct) { toast('Ingresá un porcentaje', 'error'); return; }
+  let count = 0;
+  productos.forEach(p => {
+    if (!cat || p.categoria === cat) {
+      if (p.precio > 0) { p.precio = Math.round(p.precio * (1 + pct/100)); count++; }
+    }
+  });
+  save();
+  renderCatalogo(document.getElementById('buscar-producto').value, document.getElementById('filtro-cat').value);
+  renderComparador();
+  toast(`✅ Precios actualizados en ${count} productos (${pct > 0 ? '+' : ''}${pct}%)`, 'success');
+  // Simular sincronización con app de locales
+  setTimeout(() => toast('🔄 Sincronizado con App de Locales', 'success'), 800);
+}
+
+function sincronizarConLocales(id, campo, valor) {
+  // En producción: llamada al Apps Script de la app de locales
+  // fetch(APPS_SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'updatePrecio', id, campo, valor})})
+  console.log(`[Sync] Producto ${id} → ${campo}: ${valor}`);
+}
+
+function guardarNuevoProducto() {
+  const nombre = document.getElementById('np-nombre').value.trim();
+  if (!nombre) { toast('Ingresá un nombre', 'error'); return; }
+  const cat = document.getElementById('np-cat-nueva').value.trim() || document.getElementById('np-cat').value || 'Sin categoría';
+  const p = {
+    id: uid(),
+    nombre,
+    categoria: cat,
+    precio: parseFloat(document.getElementById('np-precio').value) || 0,
+    costo: parseFloat(document.getElementById('np-costo').value) || 0,
+    stockMinimo: parseInt(document.getElementById('np-stock-min').value) || 0,
+    stockIdeal: parseInt(document.getElementById('np-stock-ideal').value) || 0
+  };
+  productos.push(p);
+  save();
+  poblarFiltros();
+  renderCatalogo();
+  closeModal('modal-nuevo-producto');
+  toast('Producto agregado ✅');
+  ['np-nombre','np-precio','np-costo','np-stock-min','np-stock-ideal','np-cat-nueva'].forEach(id => document.getElementById(id).value = '');
+}
+
+function eliminarProducto(id) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  productos = productos.filter(p => p.id !== id);
+  save();
+  renderCatalogo();
+  poblarFiltros();
+  toast('Producto eliminado', 'error');
+}
+
+// ==========================================
+// PROVEEDORES
+// ==========================================
+function filtrarProveedores() {
+  const q = document.getElementById('buscar-proveedor').value.toLowerCase();
+  renderProveedores(q);
+}
+
+function renderProveedores(q='') {
+  const el = document.getElementById('lista-proveedores');
+  const filtrados = proveedores.filter(p => !q || p.nombre.toLowerCase().includes(q));
+  if (!filtrados.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🏭</div><p>Aún no cargaste proveedores.<br>Hacé clic en <strong>+ Nuevo proveedor</strong> para empezar.</p></div>';
+    return;
+  }
+  el.innerHTML = filtrados.map(p => {
+    const lista = listasProveedores[p.id] || [];
+    const matchCount = Object.keys(matchesAprobados[p.id] || {}).length;
+    return `<div class="proveedor-card">
+      <div>
+        <div class="proveedor-name">🏭 ${p.nombre}</div>
+        <div class="proveedor-meta">
+          ${p.tel ? '📱 ' + p.tel + ' · ' : ''}
+          ${lista.length} productos cargados · ${matchCount} matches aprobados
+          ${p.notas ? ' · ' + p.notas : ''}
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm btn-outline" onclick="seleccionarProveedor('${p.id}')">📄 Subir lista</button>
+        <button class="btn btn-sm btn-danger" onclick="eliminarProveedor('${p.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function guardarNuevoProveedor() {
+  const nombre = document.getElementById('prov-nombre').value.trim();
+  if (!nombre) { toast('Ingresá un nombre', 'error'); return; }
+  const p = {
+    id: uid(),
+    nombre,
+    tel: document.getElementById('prov-tel').value.trim(),
+    email: document.getElementById('prov-email').value.trim(),
+    notas: document.getElementById('prov-notas').value.trim()
+  };
+  proveedores.push(p);
+  save();
+  renderProveedores();
+  renderPedidoProveedores();
+  updateCompProveedoresFiltro();
+  closeModal('modal-nuevo-proveedor');
+  toast('Proveedor guardado ✅');
+  ['prov-nombre','prov-tel','prov-email','prov-notas'].forEach(id => document.getElementById(id).value = '');
+}
+
+function eliminarProveedor(id) {
+  if (!confirm('¿Eliminar proveedor y su lista?')) return;
+  proveedores = proveedores.filter(p => p.id !== id);
+  delete listasProveedores[id];
+  delete matchesAprobados[id];
+  save();
+  renderProveedores();
+  renderComparador();
+  renderPedidoProveedores();
+  toast('Proveedor eliminado', 'error');
+}
+
+function seleccionarProveedor(id) {
+  proveedorSeleccionadoId = id;
+  const p = proveedores.find(x => x.id === id);
+  document.getElementById('proveedor-seleccionado-nombre').textContent = p.nombre;
+  document.getElementById('subir-lista-section').style.display = 'block';
+  document.getElementById('matches-section').style.display = 'none';
+  document.getElementById('texto-lista').value = '';
+  document.getElementById('subir-lista-section').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelarSubida() {
+  document.getElementById('subir-lista-section').style.display = 'none';
+  proveedorSeleccionadoId = null;
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-area').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) procesarArchivo(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) procesarArchivo(file);
+}
+
+function procesarArchivo(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    // Para imágenes, convertir a base64 y enviar a IA
+    if (file.type.startsWith('image/')) {
+      procesarListaConIA(null, e.target.result);
+    } else {
+      toast('PDF detectado — usá la opción de texto por ahora', 'error');
+    }
+  };
+  if (file.type.startsWith('image/')) reader.readAsDataURL(file);
+  else reader.readAsText(file);
+}
+
+function procesarLista() {
+  const texto = document.getElementById('texto-lista').value.trim();
+  if (!texto && !document.getElementById('file-input').files[0]) {
+    toast('Pegá texto o subí un archivo', 'error'); return;
+  }
+  procesarListaConIA(texto, null);
+}
+
+async function procesarListaConIA(texto, imagenBase64) {
+  if (!proveedorSeleccionadoId) return;
+  document.getElementById('procesando-lista').style.display = 'flex';
+
+  const prov = proveedores.find(x => x.id === proveedorSeleccionadoId);
+
+  let userContent = [];
+  if (imagenBase64) {
+    userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imagenBase64.split(',')[1] } });
+    userContent.push({ type: 'text', text: 'Extraé todos los productos con sus precios de esta lista de precios mayorista. El nombre del proveedor puede estar en el encabezado.' });
+  } else {
+    userContent.push({ type: 'text', text: `Extraé todos los productos con sus precios de este texto de lista mayorista:\n\n${texto}` });
+  }
+
+  const systemPrompt = `Sos un extractor de datos de listas de precios mayoristas de productos de limpieza en Argentina.
+Tu tarea es extraer TODOS los productos y devolver un JSON válido con esta estructura exacta:
+{
+  "proveedor_detectado": "Nombre del proveedor si aparece en el texto o imagen, sino null",
+  "productos": [
+    {
+      "nombre": "nombre exacto como aparece en la lista",
+      "precio": número (en pesos argentinos),
+      "unidad": "litro|bidón 5L|bidón 10L|bidón 20L|kg|unidad|otro",
+      "categoria": "categoría del producto si se puede inferir"
+    }
+  ]
+}
+IMPORTANTE: 
+- Solo devolvé el JSON, sin texto adicional, sin markdown, sin backticks
+- Si un producto tiene precio "x litro" o "x kg", ponés ese precio en el campo precio y la unidad correspondiente
+- Si hay variantes de aromas/sabores con el mismo precio, poné UN solo registro genérico
+- Incluí TODOS los productos que aparecen en la lista`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content?.find(c => c.type === 'text')?.text || '';
+    const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
+
+    // Detectar proveedor
+    if (parsed.proveedor_detectado) {
+      document.getElementById('proveedor-seleccionado-nombre').textContent =
+        `${proveedores.find(x=>x.id===proveedorSeleccionadoId).nombre} (IA detectó: "${parsed.proveedor_detectado}")`;
+    }
+
+    // Guardar lista bruta
+    listasProveedores[proveedorSeleccionadoId] = parsed.productos;
+    save();
+
+    // Hacer matching automático
+    generarMatches(parsed.productos);
+
+  } catch(e) {
+    console.error(e);
+    toast('Error al procesar la lista. Verificá tu conexión.', 'error');
+    document.getElementById('procesando-lista').style.display = 'none';
+  }
+}
+
+function normalizarNombre(n) {
+  return n.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+
+function similitud(a, b) {
+  const na = normalizarNombre(a), nb = normalizarNombre(b);
+  const wordsA = new Set(na.split(' '));
+  const wordsB = new Set(nb.split(' '));
+  const comunes = [...wordsA].filter(w => wordsB.has(w) && w.length > 2).length;
+  return comunes / Math.max(wordsA.size, wordsB.size);
+}
+
+function generarMatches(productosProveedor) {
+  document.getElementById('procesando-lista').style.display = 'none';
+  matchesPendientes = [];
+  const aprobados = matchesAprobados[proveedorSeleccionadoId] || {};
+
+  productosProveedor.forEach(pp => {
+    if (aprobados[pp.nombre]) return; // ya aprobado
+    let mejor = null, mejorScore = 0;
+    productos.forEach(p => {
+      const s = similitud(pp.nombre, p.nombre);
+      if (s > mejorScore) { mejorScore = s; mejor = p; }
+    });
+    if (mejorScore > 0.3 && mejorScore < 1.0) {
+      matchesPendientes.push({ provNombre: pp.nombre, catalogo: mejor, score: mejorScore });
+    } else if (mejorScore === 1.0) {
+      // Match exacto, aprobar automáticamente
+      if (!matchesAprobados[proveedorSeleccionadoId]) matchesAprobados[proveedorSeleccionadoId] = {};
+      matchesAprobados[proveedorSeleccionadoId][pp.nombre] = mejor.id;
+    }
+  });
+  save();
+
+  renderMatchesPendientes();
+  document.getElementById('matches-section').style.display = matchesPendientes.length ? 'block' : 'none';
+  if (!matchesPendientes.length) {
+    toast('✅ Lista procesada. Todos los matches son exactos o ya estaban aprobados.');
+    renderComparador();
+  }
+}
+
+function renderMatchesPendientes() {
+  const el = document.getElementById('lista-matches');
+  el.innerHTML = matchesPendientes.map((m, i) => `
+    <div class="match-item" id="match-${i}">
+      <div class="match-proveedor">
+        <div style="font-size:12px; color:var(--muted);">En lista del proveedor:</div>
+        <div style="font-weight:600; font-size:13px;">${m.provNombre}</div>
+      </div>
+      <div class="match-arrow">→</div>
+      <div class="match-catalogo">
+        <div style="font-size:12px; color:var(--muted);">Mi catálogo:</div>
+        <div style="font-weight:600; font-size:13px;">${m.catalogo.nombre}</div>
+        <div style="font-size:11px; color:var(--muted);">${m.catalogo.categoria}</div>
+      </div>
+      <span class="badge match-score orange">${Math.round(m.score*100)}% similar</span>
+      <div class="match-actions">
+        <button class="btn btn-sm btn-approve" onclick="aprobarMatch(${i})">✓ Aprobar</button>
+        <button class="btn btn-sm btn-reject" onclick="rechazarMatch(${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function aprobarMatch(i) {
+  const m = matchesPendientes[i];
+  if (!matchesAprobados[proveedorSeleccionadoId]) matchesAprobados[proveedorSeleccionadoId] = {};
+  matchesAprobados[proveedorSeleccionadoId][m.provNombre] = m.catalogo.id;
+  document.getElementById(`match-${i}`).style.opacity = '0.4';
+  save();
+  checkMatchesDone();
+}
+
+function rechazarMatch(i) {
+  document.getElementById(`match-${i}`).style.opacity = '0.4';
+  checkMatchesDone();
+}
+
+function aprobarTodos() { matchesPendientes.forEach((m, i) => aprobarMatch(i)); }
+function rechazarTodos() { matchesPendientes.forEach((_, i) => rechazarMatch(i)); }
+
+function checkMatchesDone() {
+  const pending = document.querySelectorAll('[id^="match-"]');
+  const done = [...pending].every(el => el.style.opacity === '0.4');
+  if (done) toast('Matches revisados. Guardá la lista para continuar.');
+}
+
+function guardarListaAprobada() {
+  save();
+  renderComparador();
+  renderProveedores();
+  document.getElementById('subir-lista-section').style.display = 'none';
+  toast('✅ Lista guardada y comparador actualizado');
+  switchTab('comparador');
+}
+
+// ==========================================
+// COMPARADOR
+// ==========================================
+function updateCompProveedoresFiltro() {
+  const sel = document.getElementById('filtro-prov-comp');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Todos los proveedores</option>';
+  proveedores.forEach(p => {
+    if (!listasProveedores[p.id]?.length) return;
+    const o = document.createElement('option'); o.value = p.id; o.textContent = p.nombre; sel.appendChild(o);
+  });
+}
+
+function filtrarComparador() { renderComparador(); }
+
+function renderComparador() {
+  updateCompProveedoresFiltro();
+  const q = document.getElementById('buscar-comp').value.toLowerCase();
+  const cat = document.getElementById('filtro-cat-comp').value;
+  const filtProv = document.getElementById('filtro-prov-comp').value;
+
+  const provsConLista = proveedores.filter(p => listasProveedores[p.id]?.length);
+
+  if (!provsConLista.length) {
+    document.getElementById('tabla-comparador').style.display = 'none';
+    document.getElementById('comp-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('tabla-comparador').style.display = '';
+  document.getElementById('comp-empty').style.display = 'none';
+
+  const provsActivos = filtProv ? provsConLista.filter(p => p.id === filtProv) : provsConLista;
+
+  // Build header
+  const head = document.getElementById('comp-head');
+  head.innerHTML = `<tr>
+    <th>Producto</th>
+    <th>Categoría</th>
+    ${provsActivos.map(p => `<th style="text-align:right;">${p.nombre}</th>`).join('')}
+    <th style="text-align:right;">Mi precio venta</th>
+    <th style="text-align:right;">Mejor margen</th>
+  </tr>`;
+
+  // Build rows — for each product in catalogo
+  const filtrados = productos.filter(p => {
+    const matchQ = !q || p.nombre.toLowerCase().includes(q);
+    const matchCat = !cat || p.categoria === cat;
+    return matchQ && matchCat;
+  });
+
+  const tbody = document.getElementById('comp-body');
+  let rows = '';
+  let hasData = false;
+
+  filtrados.forEach(prod => {
+    // For each proveedor, find price
+    const precios = provsActivos.map(prov => {
+      const lista = listasProveedores[prov.id] || [];
+      const matches = matchesAprobados[prov.id] || {};
+
+      // Check direct match by product id
+      const matchEntry = Object.entries(matches).find(([k,v]) => v === prod.id);
+      if (matchEntry) {
+        const item = lista.find(x => normalizarNombre(x.nombre) === normalizarNombre(matchEntry[0]));
+        return item ? item.precio : null;
+      }
+
+      // Try fuzzy match in lista
+      let best = null, bestScore = 0;
+      lista.forEach(item => {
+        const s = similitud(item.nombre, prod.nombre);
+        if (s > bestScore) { bestScore = s; best = item; }
+      });
+      return bestScore > 0.6 ? best.precio : null;
+    });
+
+    const precionosNull = precios.filter(x => x !== null);
+    if (!precionosNull.length) return;
+    hasData = true;
+
+    const minPrecio = Math.min(...precionosNull);
+    const mejorMargen = prod.precio > 0 && minPrecio > 0 ? ((prod.precio - minPrecio) / prod.precio * 100).toFixed(1) : null;
+
+    rows += `<tr>
+      <td style="font-weight:500; max-width:200px; word-break:break-word; font-size:12px;">${prod.nombre}</td>
+      <td><span class="badge" style="font-size:10px;">${prod.categoria}</span></td>
+      ${precios.map(precio => {
+        if (precio === null) return `<td style="text-align:right;"><span class="price-none">—</span></td>`;
+        const isWinner = precio === minPrecio;
+        return `<td style="text-align:right;" class="${isWinner ? 'highlight' : ''}">
+          <span class="${isWinner ? 'price-winner' : 'price-loser'}">${pesos(precio)}</span>
+          ${isWinner ? ' 🏆' : ''}
+        </td>`;
+      }).join('')}
+      <td style="text-align:right; font-weight:600;">${prod.precio > 0 ? pesos(prod.precio) : '—'}</td>
+      <td style="text-align:right;">
+        ${mejorMargen !== null ? `<span class="${parseFloat(mejorMargen) > 0 ? 'margin-positive' : 'margin-negative'}">${mejorMargen}%</span>` : '—'}
+      </td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = rows || '<tr><td colspan="20" style="text-align:center; color:var(--muted); padding:30px;">No hay productos con precios de proveedores para mostrar.</td></tr>';
+}
+
+// ==========================================
+// PEDIDOS
+// ==========================================
+function renderPedidoProveedores() {
+  const sel = document.getElementById('pedido-proveedor');
+  sel.innerHTML = '<option value="">Seleccioná un proveedor...</option>';
+  proveedores.forEach(p => {
+    if (!listasProveedores[p.id]?.length) return;
+    const o = document.createElement('option'); o.value = p.id; o.textContent = p.nombre; sel.appendChild(o);
+  });
+}
+
+function generarPedidoAuto() {
+  const provId = document.getElementById('pedido-proveedor').value;
+  if (!provId) {
+    document.getElementById('pedido-vacio').style.display = 'block';
+    document.getElementById('pedido-contenido').style.display = 'none';
+    return;
+  }
+  document.getElementById('pedido-vacio').style.display = 'none';
+  document.getElementById('pedido-contenido').style.display = 'block';
+
+  const prov = proveedores.find(x => x.id === provId);
+  const lista = listasProveedores[provId] || [];
+  const matches = matchesAprobados[provId] || {};
+
+  pedidoActual = [];
+
+  // Para cada producto en el catálogo con stock ideal > 0
+  productos.forEach(prod => {
+    if (prod.stockIdeal <= 0) return;
+
+    const stockActual = 0; // En producción: sincronizado desde app de locales
+    const necesita = prod.stockIdeal - stockActual;
+    if (necesita <= 0) return;
+
+    // Buscar precio del proveedor
+    const matchEntry = Object.entries(matches).find(([k,v]) => v === prod.id);
+    let precioProveedor = null;
+    if (matchEntry) {
+      const item = lista.find(x => normalizarNombre(x.nombre) === normalizarNombre(matchEntry[0]));
+      if (item) precioProveedor = item.precio;
+    }
+    if (!precioProveedor) return;
+
+    pedidoActual.push({
+      productoId: prod.id,
+      nombre: prod.nombre,
+      cantidad: Math.max(necesita, prod.stockMinimo > 0 ? prod.stockMinimo : 1),
+      precio: precioProveedor,
+      unidad: lista.find(x => matchEntry && normalizarNombre(x.nombre) === normalizarNombre(matchEntry[0]))?.unidad || 'unidad'
+    });
+  });
+
+  const total = pedidoActual.reduce((s, x) => s + x.cantidad * x.precio, 0);
+  document.getElementById('pedido-info-bar').innerHTML = `
+    🏭 <strong>${prov.nombre}</strong> · ${pedidoActual.length} productos · Total estimado: <strong>${pesos(total)}</strong>
+    ${prod => prod.notas ? ' · ' + prov.notas : ''}
+  `;
+
+  renderListaPedido();
+}
+
+function renderListaPedido() {
+  const el = document.getElementById('lista-pedido');
+  if (!pedidoActual.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>No hay productos que reponer según el stock ideal configurado.<br>Configurá stock mínimo e ideal en el <strong>Catálogo</strong>.</p></div>';
+    document.getElementById('pedido-output-card').style.display = 'none';
+    return;
+  }
+
+  el.innerHTML = pedidoActual.map((item, i) => `
+    <div class="pedido-item">
+      <div class="pedido-nombre">${item.nombre} <span style="font-size:11px; color:var(--muted);">(${item.unidad})</span></div>
+      <input class="editable pedido-cant" type="number" value="${item.cantidad}" min="1"
+        onchange="pedidoActual[${i}].cantidad = parseInt(this.value)||1; actualizarTotalPedido()">
+      <div class="pedido-precio">${pesos(item.precio)}</div>
+      <div class="pedido-remove" onclick="quitarItemPedido(${i})">✕</div>
+    </div>
+  `).join('');
+
+  actualizarTotalPedido();
+  document.getElementById('pedido-output-card').style.display = 'block';
+  generarTextoPedido();
+}
+
+function actualizarTotalPedido() {
+  const total = pedidoActual.reduce((s, x) => s + x.cantidad * x.precio, 0);
+  const provId = document.getElementById('pedido-proveedor').value;
+  const prov = proveedores.find(x => x.id === provId);
+  if (prov) {
+    document.getElementById('pedido-info-bar').innerHTML = `🏭 <strong>${prov.nombre}</strong> · ${pedidoActual.length} productos · Total estimado: <strong>${pesos(total)}</strong>`;
+  }
+  generarTextoPedido();
+}
+
+function quitarItemPedido(i) {
+  pedidoActual.splice(i, 1);
+  renderListaPedido();
+}
+
+function agregarManual() {
+  const prodId = document.getElementById('pedido-prod-manual').value;
+  const cant = parseInt(document.getElementById('pedido-cant-manual').value) || 1;
+  if (!prodId) { toast('Seleccioná un producto', 'error'); return; }
+  const prod = productos.find(x => x.id === prodId);
+  pedidoActual.push({ productoId: prodId, nombre: prod.nombre, cantidad: cant, precio: prod.costo || 0, unidad: 'unidad' });
+  renderListaPedido();
+  document.getElementById('pedido-prod-manual').value = '';
+  document.getElementById('pedido-cant-manual').value = '';
+}
+
+function generarTextoPedido() {
+  const provId = document.getElementById('pedido-proveedor').value;
+  const prov = proveedores.find(x => x.id === provId);
+  if (!prov || !pedidoActual.length) return;
+
+  const fecha = new Date().toLocaleDateString('es-AR');
+  let txt = `PEDIDO — ${prov.nombre}\nFecha: ${fecha}\n`;
+  txt += '─'.repeat(35) + '\n';
+  pedidoActual.forEach((item, i) => {
+    txt += `${i+1}. ${item.nombre}\n   Cant: ${item.cantidad} ${item.unidad} · Precio: ${pesos(item.precio)} · Subtotal: ${pesos(item.cantidad * item.precio)}\n`;
+  });
+  txt += '─'.repeat(35) + '\n';
+  const total = pedidoActual.reduce((s, x) => s + x.cantidad * x.precio, 0);
+  txt += `TOTAL: ${pesos(total)}\n`;
+  if (prov.tel) txt += `\nEnviar a: ${prov.tel}`;
+
+  document.getElementById('pedido-output-text').textContent = txt;
+  return txt;
+}
+
+function copiarPedido() {
+  const txt = document.getElementById('pedido-output-text').textContent;
+  navigator.clipboard.writeText(txt).then(() => toast('📋 Copiado al portapapeles'));
+}
+
+function abrirExportarPedido() {
+  const txt = generarTextoPedido();
+  const msg = document.getElementById('export-mensaje')?.value || '';
+  document.getElementById('modal-output-text').textContent = (msg ? msg + '\n\n' : '') + txt;
+  openModal('modal-exportar');
+}
+
+function copiarPedidoModal() {
+  const txt = document.getElementById('modal-output-text').textContent;
+  navigator.clipboard.writeText(txt).then(() => toast('📋 Copiado'));
+}
+
+function emailPedido() {
+  const provId = document.getElementById('pedido-proveedor').value;
+  const prov = proveedores.find(x => x.id === provId);
+  const txt = generarTextoPedido();
+  const subject = encodeURIComponent(`Pedido — ${new Date().toLocaleDateString('es-AR')}`);
+  const body = encodeURIComponent(txt);
+  const email = prov?.email || '';
+  window.open(`https://mail.google.com/mail/?view=cm&to=${email}&su=${subject}&body=${body}`, '_blank');
+}
+
+function exportarPDF() {
+  const txt = generarTextoPedido();
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>Pedido</title>
+  <style>body{font-family:monospace;padding:30px;white-space:pre-wrap;font-size:14px;line-height:1.7;}</style></head>
+  <body>${txt}</body></html>`);
+  w.document.close();
+  w.print();
+}
+
+// ==========================================
+// TABS
+// ==========================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${tab}')"]`)?.classList.add('active');
+  document.getElementById('panel-' + tab)?.classList.add('active');
+
+  if (tab === 'comparador') renderComparador();
+  if (tab === 'pedidos') renderPedidoProveedores();
+}
+
+// INIT
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
