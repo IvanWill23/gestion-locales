@@ -1124,58 +1124,71 @@ function handleFileSelect(e) {
 
 function procesarArchivo(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
-    // Para imágenes, convertir a base64 y enviar a IA
-    if (file.type.startsWith('image/')) {
-      procesarListaConIA(null, e.target.result);
-    } else {
-      toast('PDF detectado — usá la opción de texto por ahora', 'error');
-    }
-  };
-  if (file.type.startsWith('image/')) reader.readAsDataURL(file);
-  else reader.readAsText(file);
+
+  if (file.type.startsWith('image/')) {
+    reader.onload = (e) => procesarListaConIA(null, e.target.result, file.type);
+    reader.readAsDataURL(file);
+  } else if (file.type === 'application/pdf') {
+    reader.onload = (e) => procesarListaConIA(null, e.target.result, 'application/pdf');
+    reader.readAsDataURL(file);
+  } else {
+    reader.onload = (e) => procesarListaConIA(e.target.result, null, null);
+    reader.readAsText(file);
+  }
 }
 
 function procesarLista() {
   const texto = document.getElementById('texto-lista').value.trim();
-  if (!texto && !document.getElementById('file-input').files[0]) {
+  const fileInput = document.getElementById('file-input');
+  const file = fileInput.files[0];
+
+  if (file) {
+    procesarArchivo(file);
+    return;
+  }
+  if (!texto) {
     toast('Pegá texto o subí un archivo', 'error'); return;
   }
-  procesarListaConIA(texto, null);
+  procesarListaConIA(texto, null, null);
 }
 
-async function procesarListaConIA(texto, imagenBase64) {
+async function procesarListaConIA(texto, archivoBase64, mimeType) {
   if (!proveedorSeleccionadoId) return;
   document.getElementById('procesando-lista').style.display = 'flex';
 
-  const prov = proveedores.find(x => x.id === proveedorSeleccionadoId);
+  const systemPrompt = `Sos un extractor de datos de listas de precios mayoristas de productos de limpieza en Argentina.
+Tu tarea es extraer TODOS los productos y devolver ÚNICAMENTE un JSON válido con esta estructura:
+{"proveedor_detectado":"Nombre del proveedor si aparece, sino null","productos":[{"nombre":"nombre exacto como aparece","precio":0,"unidad":"litro|bidón 5L|bidón 10L|bidón 20L|kg|unidad|otro","categoria":"categoría inferida"}]}
+REGLAS ESTRICTAS:
+- Devolvé SOLO el JSON, sin texto previo, sin markdown, sin backticks, sin explicaciones
+- precio siempre es un número (sin signo $, sin puntos de miles)
+- Si un producto vale "x litro" o "x kg", registrá ese precio con esa unidad
+- Variantes de aromas/sabores con el mismo precio = UN solo registro genérico sin mencionar el aroma
+- Incluí absolutamente TODOS los productos visibles`;
 
   let userContent = [];
-  if (imagenBase64) {
-    userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imagenBase64.split(',')[1] } });
-    userContent.push({ type: 'text', text: 'Extraé todos los productos con sus precios de esta lista de precios mayorista. El nombre del proveedor puede estar en el encabezado.' });
-  } else {
-    userContent.push({ type: 'text', text: `Extraé todos los productos con sus precios de este texto de lista mayorista:\n\n${texto}` });
-  }
 
-  const systemPrompt = `Sos un extractor de datos de listas de precios mayoristas de productos de limpieza en Argentina.
-Tu tarea es extraer TODOS los productos y devolver un JSON válido con esta estructura exacta:
-{
-  "proveedor_detectado": "Nombre del proveedor si aparece en el texto o imagen, sino null",
-  "productos": [
-    {
-      "nombre": "nombre exacto como aparece en la lista",
-      "precio": número (en pesos argentinos),
-      "unidad": "litro|bidón 5L|bidón 10L|bidón 20L|kg|unidad|otro",
-      "categoria": "categoría del producto si se puede inferir"
-    }
-  ]
-}
-IMPORTANTE: 
-- Solo devolvé el JSON, sin texto adicional, sin markdown, sin backticks
-- Si un producto tiene precio "x litro" o "x kg", ponés ese precio en el campo precio y la unidad correspondiente
-- Si hay variantes de aromas/sabores con el mismo precio, poné UN solo registro genérico
-- Incluí TODOS los productos que aparecen en la lista`;
+  if (archivoBase64 && mimeType && mimeType !== 'application/pdf') {
+    // Es imagen
+    const base64Data = archivoBase64.split(',')[1];
+    const mediaType = mimeType.startsWith('image/png') ? 'image/png' : 'image/jpeg';
+    userContent = [
+      { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+      { type: 'text', text: 'Extraé todos los productos con precios de esta imagen de lista mayorista.' }
+    ];
+  } else if (archivoBase64 && mimeType === 'application/pdf') {
+    // Es PDF
+    const base64Data = archivoBase64.split(',')[1];
+    userContent = [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } },
+      { type: 'text', text: 'Extraé todos los productos con precios de este PDF de lista mayorista.' }
+    ];
+  } else {
+    // Es texto
+    userContent = [
+      { type: 'text', text: `Extraé todos los productos con precios de esta lista mayorista:\n\n${texto}` }
+    ];
+  }
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1188,27 +1201,45 @@ IMPORTANTE:
         messages: [{ role: 'user', content: userContent }]
       })
     });
-    const data = await resp.json();
-    const txt = data.content?.find(c => c.type === 'text')?.text || '';
-    const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
 
-    // Detectar proveedor
-    if (parsed.proveedor_detectado) {
-      document.getElementById('proveedor-seleccionado-nombre').textContent =
-        `${proveedores.find(x=>x.id===proveedorSeleccionadoId).nombre} (IA detectó: "${parsed.proveedor_detectado}")`;
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      console.error('API error:', resp.status, errData);
+      throw new Error(`API respondió con status ${resp.status}: ${errData.error?.message || 'error desconocido'}`);
     }
 
-    // Guardar lista bruta
+    const data = await resp.json();
+    const rawText = data.content?.find(c => c.type === 'text')?.text || '';
+
+    // Extraer JSON robusto — buscar el primer { hasta el último }
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('La IA no devolvió un JSON válido. Intentá de nuevo.');
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    if (!parsed.productos || !Array.isArray(parsed.productos)) {
+      throw new Error('No se detectaron productos en la lista.');
+    }
+
+    // Notificar proveedor detectado
+    if (parsed.proveedor_detectado) {
+      document.getElementById('proveedor-seleccionado-nombre').textContent =
+        `${proveedores.find(x => x.id === proveedorSeleccionadoId).nombre} (IA detectó: "${parsed.proveedor_detectado}")`;
+    }
+
+    toast(`✅ ${parsed.productos.length} productos extraídos`, 'success');
+
+    // Guardar lista
     listasProveedores[proveedorSeleccionadoId] = parsed.productos;
     save();
 
-    // Hacer matching automático
+    // Matching automático
     generarMatches(parsed.productos);
 
   } catch(e) {
-    console.error(e);
-    toast('Error al procesar la lista. Verificá tu conexión.', 'error');
+    console.error('procesarListaConIA error:', e);
     document.getElementById('procesando-lista').style.display = 'none';
+    toast('Error: ' + (e.message || 'Verificá tu conexión e intentá de nuevo.'), 'error');
   }
 }
 
