@@ -636,7 +636,7 @@
       <!-- MATCHES PENDIENTES -->
       <div id="matches-section" style="display:none; margin-top:20px;">
         <div class="card-title"><div class="dot" style="background:var(--warn);"></div> Coincidencias automáticas para revisar</div>
-        <div class="info-bar">⚠️ Se detectaron estas posibles equivalencias con tu catálogo. Aprobá o rechazá cada una antes de guardar.</div>
+        <div class="info-bar">⚠️ Revisá cada producto: aprobá la coincidencia si es correcta, marcalo como nuevo si no existe en tu catálogo, o ignoralo.</div>
         <div id="lista-matches"></div>
         <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="guardarListaAprobada()">✅ Confirmar y guardar lista</button>
@@ -1196,12 +1196,16 @@ function generarMatches(productosProveedor) {
       const s = similitud(pp.nombre, p.nombre);
       if (s > mejorScore) { mejorScore = s; mejor = p; }
     });
-    if (mejorScore > 0.3 && mejorScore < 1.0) {
-      matchesPendientes.push({ provNombre: pp.nombre, catalogo: mejor, score: mejorScore });
-    } else if (mejorScore === 1.0) {
+    if (mejorScore >= 1.0) {
       // Match exacto, aprobar automáticamente
       if (!matchesAprobados[proveedorSeleccionadoId]) matchesAprobados[proveedorSeleccionadoId] = {};
       matchesAprobados[proveedorSeleccionadoId][pp.nombre] = mejor.id;
+    } else if (mejorScore > 0.3) {
+      // Match parcial — para revisar
+      matchesPendientes.push({ provNombre: pp.nombre, provItem: pp, catalogo: mejor, score: mejorScore, sinMatch: false });
+    } else {
+      // Sin match — también para revisar, pero ofreciendo "agregar como nuevo"
+      matchesPendientes.push({ provNombre: pp.nombre, provItem: pp, catalogo: null, score: 0, sinMatch: true });
     }
   });
   save();
@@ -1216,25 +1220,70 @@ function generarMatches(productosProveedor) {
 
 function renderMatchesPendientes() {
   const el = document.getElementById('lista-matches');
-  el.innerHTML = matchesPendientes.map((m, i) => `
+  el.innerHTML = matchesPendientes.map((m, i) => {
+    if (m.sinMatch) {
+      return `
+      <div class="match-item" id="match-${i}">
+        <div class="match-proveedor" style="flex:2;">
+          <div style="font-size:12px; color:var(--muted);">En lista del proveedor (sin coincidencia en tu catálogo):</div>
+          <div style="font-weight:600; font-size:15px;">${m.provNombre}</div>
+          <div style="font-size:13px; color:var(--accent); margin-top:2px;">${pesos(m.provItem.precio)} · ${m.provItem.unidad}</div>
+        </div>
+        <span class="badge red">Sin match</span>
+        <div class="match-actions">
+          <button class="btn btn-sm btn-approve" onclick="agregarComoNuevo(${i})">+ Agregar como nuevo</button>
+          <button class="btn btn-sm btn-reject" onclick="rechazarMatch(${i})">✕ Ignorar</button>
+        </div>
+      </div>`;
+    }
+    return `
     <div class="match-item" id="match-${i}">
       <div class="match-proveedor">
         <div style="font-size:12px; color:var(--muted);">En lista del proveedor:</div>
-        <div style="font-weight:600; font-size:13px;">${m.provNombre}</div>
+        <div style="font-weight:600; font-size:15px;">${m.provNombre}</div>
       </div>
       <div class="match-arrow">→</div>
       <div class="match-catalogo">
         <div style="font-size:12px; color:var(--muted);">Mi catálogo:</div>
-        <div style="font-weight:600; font-size:13px;">${m.catalogo.nombre}</div>
-        <div style="font-size:11px; color:var(--muted);">${m.catalogo.categoria}</div>
+        <div style="font-weight:600; font-size:15px;">${m.catalogo.nombre}</div>
+        <div style="font-size:13px; color:var(--muted);">${m.catalogo.categoria}</div>
       </div>
       <span class="badge match-score orange">${Math.round(m.score*100)}% similar</span>
       <div class="match-actions">
         <button class="btn btn-sm btn-approve" onclick="aprobarMatch(${i})">✓ Aprobar</button>
+        <button class="btn btn-sm btn-outline" onclick="agregarComoNuevo(${i})">+ Es producto nuevo</button>
         <button class="btn btn-sm btn-reject" onclick="rechazarMatch(${i})">✕</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+}
+
+function agregarComoNuevo(i) {
+  const m = matchesPendientes[i];
+  const item = m.provItem;
+
+  const nuevoProducto = {
+    id: uid(),
+    nombre: item.nombre,
+    categoria: item.categoria || 'Sin categoría',
+    precio: 0, // el precio de venta lo definís vos manualmente
+    costo: item.precio, // el precio del proveedor se carga como costo
+    stockMinimo: 0,
+    stockIdeal: 0
+  };
+
+  productos.push(nuevoProducto);
+
+  if (!matchesAprobados[proveedorSeleccionadoId]) matchesAprobados[proveedorSeleccionadoId] = {};
+  matchesAprobados[proveedorSeleccionadoId][m.provNombre] = nuevoProducto.id;
+
+  save();
+  poblarFiltros();
+  renderCatalogo();
+
+  document.getElementById(`match-${i}`).style.opacity = '0.4';
+  toast(`✅ "${item.nombre}" agregado al catálogo. Definí su precio de venta en la pestaña Catálogo.`, 'success');
+  checkMatchesDone();
 }
 
 function aprobarMatch(i) {
@@ -1251,7 +1300,9 @@ function rechazarMatch(i) {
   checkMatchesDone();
 }
 
-function aprobarTodos() { matchesPendientes.forEach((m, i) => aprobarMatch(i)); }
+function aprobarTodos() {
+  matchesPendientes.forEach((m, i) => { if (!m.sinMatch) aprobarMatch(i); });
+}
 function rechazarTodos() { matchesPendientes.forEach((_, i) => rechazarMatch(i)); }
 
 function checkMatchesDone() {
