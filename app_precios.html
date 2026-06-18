@@ -607,37 +607,36 @@
 
     <!-- SUBIR LISTA -->
     <div class="card" id="subir-lista-section" style="display:none;">
-      <div class="card-title"><div class="dot"></div> Subir lista de precios</div>
-      <div style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+      <div class="card-title"><div class="dot"></div> Cargar lista de precios</div>
+      <div style="font-size:14px; color:var(--muted); margin-bottom:14px;">
         Proveedor seleccionado: <strong id="proveedor-seleccionado-nombre" style="color:var(--text);"></strong>
       </div>
-      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()" 
-           ondragover="event.preventDefault(); this.classList.add('dragover')"
-           ondragleave="this.classList.remove('dragover')"
-           ondrop="handleDrop(event)">
-        <div class="upload-icon">📄</div>
-        <div class="upload-text"><strong>Hacé clic o arrastrá</strong> tu lista aquí</div>
-        <div class="upload-text" style="margin-top:4px; font-size:12px;">Imagen (JPG/PNG), PDF o pegar texto abajo</div>
+
+      <div class="info-bar" style="align-items:flex-start;">
+        💡 Esta app no puede leer imágenes o PDF por sí sola (por restricciones de seguridad del navegador).
+        Mandale la foto/PDF de la lista a Claude por chat, pedile que la convierta al formato de abajo, y pegá el resultado aquí.
       </div>
-      <input type="file" id="file-input" accept="image/*,.pdf" style="display:none;" onchange="handleFileSelect(event)">
 
       <div class="form-row">
-        <div class="form-label">O pegá el texto de la lista directamente</div>
-        <textarea class="form-input" id="texto-lista" rows="5" placeholder="Pegá acá el texto copiado de la lista del proveedor..." style="resize:vertical;"></textarea>
+        <div class="form-label">Pegá la lista en formato: Producto — Precio (una línea por producto)</div>
+        <textarea class="form-input" id="texto-lista" rows="8" placeholder="Cloro 530&#10;Lavandina 320&#10;Lavandina en gel (c/bidón 5 lts) 1050&#10;..." style="resize:vertical; font-family:monospace;"></textarea>
+      </div>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+        Formato aceptado: nombre del producto, seguido de espacio(s) y el precio (con o sin $). Una línea por producto.
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="procesarLista()">🤖 Procesar con IA</button>
+        <button class="btn btn-primary" onclick="procesarLista()">📋 Procesar lista</button>
         <button class="btn btn-outline" onclick="cancelarSubida()">Cancelar</button>
       </div>
 
       <div id="procesando-lista" style="display:none;" class="loading">
-        <div class="spinner"></div> La IA está leyendo la lista y reconociendo productos...
+        <div class="spinner"></div> Procesando lista...
       </div>
 
       <!-- MATCHES PENDIENTES -->
       <div id="matches-section" style="display:none; margin-top:20px;">
         <div class="card-title"><div class="dot" style="background:var(--warn);"></div> Coincidencias automáticas para revisar</div>
-        <div class="info-bar">⚠️ La IA detectó estas posibles equivalencias. Aprobá o rechazá cada una antes de guardar.</div>
+        <div class="info-bar">⚠️ Se detectaron estas posibles equivalencias con tu catálogo. Aprobá o rechazá cada una antes de guardar.</div>
         <div id="lista-matches"></div>
         <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="guardarListaAprobada()">✅ Confirmar y guardar lista</button>
@@ -1110,137 +1109,64 @@ function cancelarSubida() {
   proveedorSeleccionadoId = null;
 }
 
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-area').classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (file) procesarArchivo(file);
-}
+// Parser local de texto — NO depende de ninguna API externa.
+// Funciona con líneas tipo: "Nombre del producto    $1234"  o  "Nombre del producto 1234"
+function parsearTextoLista(texto) {
+  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const productos = [];
 
-function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (file) procesarArchivo(file);
-}
+  lineas.forEach(linea => {
+    // Buscar el último número de la línea (con o sin $, con o sin puntos de miles)
+    const match = linea.match(/^(.+?)\s*\$?\s*([\d.,]+)\s*$/);
+    if (!match) return;
 
-function procesarArchivo(file) {
-  const reader = new FileReader();
+    let nombre = match[1].trim();
+    let precioStr = match[2].replace(/\./g, '').replace(',', '.');
+    let precio = parseFloat(precioStr);
 
-  if (file.type.startsWith('image/')) {
-    reader.onload = (e) => procesarListaConIA(null, e.target.result, file.type);
-    reader.readAsDataURL(file);
-  } else if (file.type === 'application/pdf') {
-    reader.onload = (e) => procesarListaConIA(null, e.target.result, 'application/pdf');
-    reader.readAsDataURL(file);
-  } else {
-    reader.onload = (e) => procesarListaConIA(e.target.result, null, null);
-    reader.readAsText(file);
-  }
+    if (!nombre || isNaN(precio) || precio <= 0) return;
+
+    // Detectar unidad mencionada en el nombre
+    let unidad = 'unidad';
+    const nombreLower = nombre.toLowerCase();
+    if (nombreLower.includes('bidon 5') || nombreLower.includes('bidón 5')) unidad = 'bidón 5L';
+    else if (nombreLower.includes('bidon 10') || nombreLower.includes('bidón 10')) unidad = 'bidón 10L';
+    else if (nombreLower.includes('bidon 20') || nombreLower.includes('bidón 20')) unidad = 'bidón 20L';
+    else if (nombreLower.includes('litro') || nombreLower.includes('x litro')) unidad = 'litro';
+    else if (nombreLower.includes('kg')) unidad = 'kg';
+
+    productos.push({ nombre, precio, unidad, categoria: '' });
+  });
+
+  return productos;
 }
 
 function procesarLista() {
   const texto = document.getElementById('texto-lista').value.trim();
-  const fileInput = document.getElementById('file-input');
-  const file = fileInput.files[0];
-
-  if (file) {
-    procesarArchivo(file);
-    return;
-  }
   if (!texto) {
-    toast('Pegá texto o subí un archivo', 'error'); return;
+    toast('Pegá la lista de productos primero', 'error'); return;
   }
-  procesarListaConIA(texto, null, null);
-}
-
-async function procesarListaConIA(texto, archivoBase64, mimeType) {
   if (!proveedorSeleccionadoId) return;
+
   document.getElementById('procesando-lista').style.display = 'flex';
 
-  const systemPrompt = `Sos un extractor de datos de listas de precios mayoristas de productos de limpieza en Argentina.
-Tu tarea es extraer TODOS los productos y devolver ÚNICAMENTE un JSON válido con esta estructura:
-{"proveedor_detectado":"Nombre del proveedor si aparece, sino null","productos":[{"nombre":"nombre exacto como aparece","precio":0,"unidad":"litro|bidón 5L|bidón 10L|bidón 20L|kg|unidad|otro","categoria":"categoría inferida"}]}
-REGLAS ESTRICTAS:
-- Devolvé SOLO el JSON, sin texto previo, sin markdown, sin backticks, sin explicaciones
-- precio siempre es un número (sin signo $, sin puntos de miles)
-- Si un producto vale "x litro" o "x kg", registrá ese precio con esa unidad
-- Variantes de aromas/sabores con el mismo precio = UN solo registro genérico sin mencionar el aroma
-- Incluí absolutamente TODOS los productos visibles`;
+  // Procesamiento instantáneo, no hay llamada a ninguna API externa
+  setTimeout(() => {
+    const productosExtraidos = parsearTextoLista(texto);
+    document.getElementById('procesando-lista').style.display = 'none';
 
-  let userContent = [];
-
-  if (archivoBase64 && mimeType && mimeType !== 'application/pdf') {
-    // Es imagen
-    const base64Data = archivoBase64.split(',')[1];
-    const mediaType = mimeType.startsWith('image/png') ? 'image/png' : 'image/jpeg';
-    userContent = [
-      { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
-      { type: 'text', text: 'Extraé todos los productos con precios de esta imagen de lista mayorista.' }
-    ];
-  } else if (archivoBase64 && mimeType === 'application/pdf') {
-    // Es PDF
-    const base64Data = archivoBase64.split(',')[1];
-    userContent = [
-      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } },
-      { type: 'text', text: 'Extraé todos los productos con precios de este PDF de lista mayorista.' }
-    ];
-  } else {
-    // Es texto
-    userContent = [
-      { type: 'text', text: `Extraé todos los productos con precios de esta lista mayorista:\n\n${texto}` }
-    ];
-  }
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }]
-      })
-    });
-
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      console.error('API error:', resp.status, errData);
-      throw new Error(`API respondió con status ${resp.status}: ${errData.error?.message || 'error desconocido'}`);
+    if (!productosExtraidos.length) {
+      toast('No se pudo detectar ningún producto. Revisá el formato: "Producto  Precio" por línea.', 'error');
+      return;
     }
 
-    const data = await resp.json();
-    const rawText = data.content?.find(c => c.type === 'text')?.text || '';
+    toast(`✅ ${productosExtraidos.length} productos detectados`, 'success');
 
-    // Extraer JSON robusto — buscar el primer { hasta el último }
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('La IA no devolvió un JSON válido. Intentá de nuevo.');
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    if (!parsed.productos || !Array.isArray(parsed.productos)) {
-      throw new Error('No se detectaron productos en la lista.');
-    }
-
-    // Notificar proveedor detectado
-    if (parsed.proveedor_detectado) {
-      document.getElementById('proveedor-seleccionado-nombre').textContent =
-        `${proveedores.find(x => x.id === proveedorSeleccionadoId).nombre} (IA detectó: "${parsed.proveedor_detectado}")`;
-    }
-
-    toast(`✅ ${parsed.productos.length} productos extraídos`, 'success');
-
-    // Guardar lista
-    listasProveedores[proveedorSeleccionadoId] = parsed.productos;
+    listasProveedores[proveedorSeleccionadoId] = productosExtraidos;
     save();
 
-    // Matching automático
-    generarMatches(parsed.productos);
-
-  } catch(e) {
-    console.error('procesarListaConIA error:', e);
-    document.getElementById('procesando-lista').style.display = 'none';
-    toast('Error: ' + (e.message || 'Verificá tu conexión e intentá de nuevo.'), 'error');
-  }
+    generarMatches(productosExtraidos);
+  }, 300);
 }
 
 function normalizarNombre(n) {
